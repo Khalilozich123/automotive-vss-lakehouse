@@ -1,0 +1,180 @@
+# Local COVESA telemetry lakehouse.
+#
+#   rustfs          S3-compatible object storage (stand-in for AWS S3)   :9000 API, :9001 console
+#   storage-init    one-shot: creates the "warehouse" bucket
+#   postgres        backing store for the Iceberg catalog                :5432
+#   iceberg-rest    Iceberg REST catalog                                 :8181
+#   spark-master    Spark standalone master                              :8080 UI
+#   spark-worker    Spark standalone worker                              :8081 UI
+#   mosquitto       MQTT broker (TCU -> cloud telemetry)                 :1883
+#   workspace       dev container / Spark driver                         :4040 Spark job UI
+#
+# Credentials below are local-only defaults; override them via environment variables.
+# All ports are bound to 127.0.0.1 so nothing is exposed to the network.
+
+name: covesa-lakehouse
+
+x-s3-env: &s3-env
+  AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-lakehouse}
+  AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-lakehouse-secret}
+  AWS_REGION: us-east-1
+
+x-spark-image: &spark-image
+  image: covesa-lakehouse/spark:3.5.9-iceberg1.10.1
+  build:
+    context: .
+    dockerfile: Dockerfile.spark
+    target: runtime
+
+services:
+  rustfs:
+    image: rustfs/rustfs:1.0.1
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:-lakehouse}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:-lakehouse-secret}
+      RUSTFS_CONSOLE_ENABLE: "true"
+    volumes:
+      - rustfs-data:/data
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9000"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  storage-init:
+    image: amazon/aws-cli:latest
+    environment: *s3-env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket warehouse 2>/dev/null
+        || aws --endpoint-url http://rustfs:9000 s3 mb s3://warehouse
+    depends_on:
+      rustfs:
+        condition: service_healthy
+    restart: "no"
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: iceberg_catalog
+      POSTGRES_USER: ${CATALOG_DB_USER:-iceberg}
+      POSTGRES_PASSWORD: ${CATALOG_DB_PASSWORD:-iceberg}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d iceberg_catalog"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  iceberg-rest:
+    image: covesa-lakehouse/iceberg-rest:1.10.1
+    build:
+      context: rest-catalog
+    environment:
+      <<: *s3-env
+      CATALOG_URI: jdbc:postgresql://postgres:5432/iceberg_catalog
+      CATALOG_JDBC_USER: ${CATALOG_DB_USER:-iceberg}
+      CATALOG_JDBC_PASSWORD: ${CATALOG_DB_PASSWORD:-iceberg}
+      CATALOG_JDBC_SCHEMA__VERSION: V1
+      CATALOG_WAREHOUSE: s3://warehouse/
+      CATALOG_IO__IMPL: org.apache.iceberg.aws.s3.S3FileIO
+      CATALOG_S3_ENDPOINT: http://rustfs:9000
+      CATALOG_S3_PATH__STYLE__ACCESS: "true"
+    ports:
+      - "127.0.0.1:8181:8181"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8181/v1/config"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage-init:
+        condition: service_completed_successfully
+
+  spark-master:
+    <<: *spark-image
+    command: ["spark-class", "org.apache.spark.deploy.master.Master",
+              "--host", "spark-master", "--port", "7077", "--webui-port", "8080"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  spark-worker:
+    <<: *spark-image
+    command: ["spark-class", "org.apache.spark.deploy.worker.Worker",
+              "--webui-port", "8081", "spark://spark-master:7077"]
+    environment:
+      <<: *s3-env
+      SPARK_WORKER_CORES: ${SPARK_WORKER_CORES:-4}
+      SPARK_WORKER_MEMORY: ${SPARK_WORKER_MEMORY:-4g}
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      spark-master:
+        condition: service_healthy
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.22
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-data:/mosquitto/data
+    ports:
+      - "127.0.0.1:1883:1883"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "1883"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  workspace:
+    image: covesa-lakehouse/dev:local
+    build:
+      context: .
+      dockerfile: Dockerfile.spark
+      target: dev
+    hostname: workspace
+    environment:
+      <<: *s3-env
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_DRIVER_HOST: workspace
+      LAKEHOUSE_CATALOG_URI: http://iceberg-rest:8181
+      LAKEHOUSE_WAREHOUSE: s3://warehouse/
+      LAKEHOUSE_S3_ENDPOINT: http://rustfs:9000
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+    volumes:
+      - ..:/workspace:cached
+      - ../.devcontainer:/workspace/.devcontainer:ro
+      - dev-venv:/home/vscode/.venv
+      - uv-cache:/home/vscode/.cache/uv
+      - dev-history:/commandhistory
+    ports:
+      - "127.0.0.1:4040:4040"
+    depends_on:
+      iceberg-rest:
+        condition: service_healthy
+      spark-worker:
+        condition: service_started
+      mosquitto:
+        condition: service_healthy
+
+volumes:
+  rustfs-data:
+  postgres-data:
+  mosquitto-data:
+  dev-venv:
+  uv-cache:
+  dev-history:

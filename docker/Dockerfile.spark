@@ -1,0 +1,81 @@
+# syntax=docker/dockerfile:1.7
+#
+# One image, two targets, so the Spark driver and the executors always run the
+# exact same Python, Java, PySpark and Iceberg versions.
+#   runtime -> spark-master / spark-worker
+#   dev     -> the "workspace" container (VS Code devcontainer, Spark driver)
+
+ARG PYTHON_VERSION=3.11
+
+# ---------------------------------------------------------------------------
+FROM python:${PYTHON_VERSION}-slim-bookworm AS runtime
+
+ARG SPARK_VERSION=3.5.9
+ARG SCALA_BINARY_VERSION=2.12
+ARG ICEBERG_VERSION=1.10.1
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openjdk-17-jre-headless procps curl tini \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s "$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")" /opt/java
+
+# The PyPI pyspark wheel ships the full Spark distribution (bin/spark-class, jars/).
+RUN pip install --no-cache-dir "pyspark==${SPARK_VERSION}"
+
+# Iceberg runtime + AWS bundle (S3FileIO). Driver ships them to executors via spark.jars.
+RUN mkdir -p /opt/iceberg/jars \
+    && base=https://repo1.maven.org/maven2/org/apache/iceberg \
+    && curl -fsSL -o /opt/iceberg/jars/iceberg-spark-runtime.jar \
+       "${base}/iceberg-spark-runtime-3.5_${SCALA_BINARY_VERSION}/${ICEBERG_VERSION}/iceberg-spark-runtime-3.5_${SCALA_BINARY_VERSION}-${ICEBERG_VERSION}.jar" \
+    && curl -fsSL -o /opt/iceberg/jars/iceberg-aws-bundle.jar \
+       "${base}/iceberg-aws-bundle/${ICEBERG_VERSION}/iceberg-aws-bundle-${ICEBERG_VERSION}.jar"
+
+ENV JAVA_HOME=/opt/java \
+    SPARK_HOME=/usr/local/lib/python3.11/site-packages/pyspark \
+    SPARK_WORKER_DIR=/opt/spark/work \
+    PYSPARK_PYTHON=python3 \
+    ICEBERG_JARS_DIR=/opt/iceberg/jars \
+    PYTHONUNBUFFERED=1
+
+RUN groupadd --gid 185 spark \
+    && useradd --uid 185 --gid spark --create-home spark \
+    && mkdir -p /opt/spark/work \
+    && chown -R spark:spark /opt/spark
+
+USER spark
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+# ---------------------------------------------------------------------------
+FROM ghcr.io/astral-sh/uv:0.10 AS uv
+
+FROM runtime AS dev
+
+USER root
+
+COPY --from=uv /uv /uvx /usr/local/bin/
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git openssh-client sudo less make jq \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --uid 1000 --create-home --shell /bin/bash vscode \
+    && echo "vscode ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/vscode \
+    && chmod 0440 /etc/sudoers.d/vscode \
+    && mkdir -p /workspace /home/vscode/.venv /home/vscode/.cache/uv /commandhistory \
+    && touch /commandhistory/.bash_history \
+    && chown -R vscode:vscode /workspace /home/vscode /commandhistory \
+    && echo 'export HISTFILE=/commandhistory/.bash_history PROMPT_COMMAND="history -a"' >> /home/vscode/.bashrc \
+    && echo 'source /home/vscode/.venv/bin/activate 2>/dev/null || true' >> /home/vscode/.bashrc
+
+# The venv lives outside the bind-mounted repo, in a named volume.
+ENV UV_PROJECT_ENVIRONMENT=/home/vscode/.venv \
+    UV_PYTHON_PREFERENCE=only-system \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_LINK_MODE=copy \
+    PYTHONDONTWRITEBYTECODE=1
+
+USER vscode
+WORKDIR /workspace
+CMD ["sleep", "infinity"]

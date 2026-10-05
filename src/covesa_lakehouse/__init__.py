@@ -1,0 +1,1 @@
+"""COVESA VSS telemetry lakehouse."""

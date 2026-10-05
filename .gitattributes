@@ -1,0 +1,7 @@
+# Everything runs inside Linux containers: keep LF endings even on a Windows checkout.
+* text=auto eol=lf
+
+*.docx binary
+*.jar binary
+*.png binary
+*.dbc text eol=lf

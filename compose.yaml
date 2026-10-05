@@ -1,0 +1,5 @@
+# Lets `docker compose up -d` work from the repo root. The stack lives in docker/.
+name: covesa-lakehouse
+
+include:
+  - docker/docker-compose.yml
