@@ -24,19 +24,30 @@ RUN apt-get update \
 # The PyPI pyspark wheel ships the full Spark distribution (bin/spark-class, jars/).
 RUN pip install --no-cache-dir "pyspark==${SPARK_VERSION}"
 
-# Iceberg runtime + AWS bundle (S3FileIO). Driver ships them to executors via spark.jars.
-RUN mkdir -p /opt/iceberg/jars \
-    && base=https://repo1.maven.org/maven2/org/apache/iceberg \
-    && curl -fsSL -o /opt/iceberg/jars/iceberg-spark-runtime.jar \
-       "${base}/iceberg-spark-runtime-3.5_${SCALA_BINARY_VERSION}/${ICEBERG_VERSION}/iceberg-spark-runtime-3.5_${SCALA_BINARY_VERSION}-${ICEBERG_VERSION}.jar" \
-    && curl -fsSL -o /opt/iceberg/jars/iceberg-aws-bundle.jar \
-       "${base}/iceberg-aws-bundle/${ICEBERG_VERSION}/iceberg-aws-bundle-${ICEBERG_VERSION}.jar"
+# Extra jars live at the same path on driver and executors and are put on the JVM classpath
+# (spark.{driver,executor}.extraClassPath) by the SparkSession factory:
+#   * Iceberg runtime + AWS bundle (S3FileIO) for the lakehouse tables
+#   * hadoop-aws + AWS SDK v1 bundle (S3A) for reading the raw landing zone;
+#     hadoop-aws must match the Hadoop version bundled with PySpark (3.3.4).
+ARG HADOOP_VERSION=3.3.4
+ARG AWS_SDK_V1_VERSION=1.12.262
+RUN mkdir -p /opt/spark-extra-jars \
+    && cd /opt/spark-extra-jars \
+    && mvn=https://repo1.maven.org/maven2 \
+    && curl -fsSL -o iceberg-spark-runtime.jar \
+       "${mvn}/org/apache/iceberg/iceberg-spark-runtime-3.5_${SCALA_BINARY_VERSION}/${ICEBERG_VERSION}/iceberg-spark-runtime-3.5_${SCALA_BINARY_VERSION}-${ICEBERG_VERSION}.jar" \
+    && curl -fsSL -o iceberg-aws-bundle.jar \
+       "${mvn}/org/apache/iceberg/iceberg-aws-bundle/${ICEBERG_VERSION}/iceberg-aws-bundle-${ICEBERG_VERSION}.jar" \
+    && curl -fsSL -o hadoop-aws.jar \
+       "${mvn}/org/apache/hadoop/hadoop-aws/${HADOOP_VERSION}/hadoop-aws-${HADOOP_VERSION}.jar" \
+    && curl -fsSL -o aws-java-sdk-bundle.jar \
+       "${mvn}/com/amazonaws/aws-java-sdk-bundle/${AWS_SDK_V1_VERSION}/aws-java-sdk-bundle-${AWS_SDK_V1_VERSION}.jar"
 
 ENV JAVA_HOME=/opt/java \
     SPARK_HOME=/usr/local/lib/python3.11/site-packages/pyspark \
     SPARK_WORKER_DIR=/opt/spark/work \
     PYSPARK_PYTHON=python3 \
-    ICEBERG_JARS_DIR=/opt/iceberg/jars \
+    SPARK_EXTRA_JARS_DIR=/opt/spark-extra-jars \
     PYTHONUNBUFFERED=1
 
 RUN groupadd --gid 185 spark \

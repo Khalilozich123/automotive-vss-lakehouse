@@ -3,13 +3,17 @@
 Every job (Bronze, Silver, Gold) gets its session from :func:`get_spark` so catalog and
 storage settings live in exactly one place. Settings come from environment variables,
 which docker/docker-compose.yml sets for the ``workspace`` container.
+
+Two S3 clients are configured against the same object store:
+
+* Iceberg ``S3FileIO`` (``s3://``) for lakehouse tables;
+* Hadoop ``S3A`` (``s3a://``) for plain files, i.e. the raw landing zone and stream checkpoints.
 """
 
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from pathlib import Path
 
 from pyspark.sql import SparkSession
 
@@ -26,15 +30,14 @@ class LakehouseConfig:
     s3_access_key: str = "lakehouse"
     s3_secret_key: str = "lakehouse-secret"
     s3_region: str = "us-east-1"
-    iceberg_jars: tuple[str, ...] = ()
+    extra_jars_dir: str | None = None
     driver_host: str | None = None
     executor_memory: str = "2g"
+    shuffle_partitions: int = 8
 
     @classmethod
     def from_env(cls, app_name: str = "covesa-lakehouse") -> LakehouseConfig:
         env = os.environ
-        jars_dir = env.get("ICEBERG_JARS_DIR")
-        jars = tuple(sorted(str(p) for p in Path(jars_dir).glob("*.jar"))) if jars_dir else ()
         return cls(
             spark_master=env.get("SPARK_MASTER_URL", cls.spark_master),
             app_name=app_name,
@@ -44,14 +47,15 @@ class LakehouseConfig:
             s3_access_key=env.get("AWS_ACCESS_KEY_ID", cls.s3_access_key),
             s3_secret_key=env.get("AWS_SECRET_ACCESS_KEY", cls.s3_secret_key),
             s3_region=env.get("AWS_REGION", cls.s3_region),
-            iceberg_jars=jars,
+            extra_jars_dir=env.get("SPARK_EXTRA_JARS_DIR"),
             driver_host=env.get("SPARK_DRIVER_HOST"),
             executor_memory=env.get("SPARK_EXECUTOR_MEMORY", cls.executor_memory),
+            shuffle_partitions=int(env.get("SPARK_SHUFFLE_PARTITIONS", cls.shuffle_partitions)),
         )
 
 
 def spark_conf(cfg: LakehouseConfig) -> dict[str, str]:
-    """Spark settings for an Iceberg REST catalog named ``lakehouse`` backed by S3FileIO."""
+    """Spark settings for an Iceberg REST catalog named ``lakehouse`` plus S3A file access."""
     cat = f"spark.sql.catalog.{CATALOG_NAME}"
     conf = {
         "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
@@ -66,11 +70,27 @@ def spark_conf(cfg: LakehouseConfig) -> dict[str, str]:
         f"{cat}.s3.access-key-id": cfg.s3_access_key,
         f"{cat}.s3.secret-access-key": cfg.s3_secret_key,
         f"{cat}.client.region": cfg.s3_region,
+        "spark.hadoop.fs.s3a.endpoint": cfg.s3_endpoint,
+        "spark.hadoop.fs.s3a.path.style.access": "true",
+        "spark.hadoop.fs.s3a.connection.ssl.enabled": str(
+            cfg.s3_endpoint.startswith("https")
+        ).lower(),
+        "spark.hadoop.fs.s3a.access.key": cfg.s3_access_key,
+        "spark.hadoop.fs.s3a.secret.key": cfg.s3_secret_key,
+        "spark.hadoop.fs.s3a.endpoint.region": cfg.s3_region,
+        "spark.hadoop.fs.s3a.aws.credentials.provider": (
+            "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider"
+        ),
         "spark.sql.session.timeZone": "UTC",
+        "spark.sql.shuffle.partitions": str(cfg.shuffle_partitions),
         "spark.executor.memory": cfg.executor_memory,
     }
-    if cfg.iceberg_jars:
-        conf["spark.jars"] = ",".join(cfg.iceberg_jars)
+    if cfg.extra_jars_dir:
+        # Same path on driver and executors (one image); JVM classpath, not spark.jars, so that
+        # Hadoop's FileSystem service loader can find S3A.
+        classpath = f"{cfg.extra_jars_dir.rstrip('/')}/*"
+        conf["spark.driver.extraClassPath"] = classpath
+        conf["spark.executor.extraClassPath"] = classpath
     if cfg.driver_host:
         # Client mode: executors in other containers must be able to call back to the driver.
         conf["spark.driver.host"] = cfg.driver_host

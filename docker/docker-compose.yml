@@ -1,15 +1,18 @@
 # Local COVESA telemetry lakehouse.
 #
 #   rustfs          S3-compatible object storage (stand-in for AWS S3)   :9000 API, :9001 console
-#   storage-init    one-shot: creates the "warehouse" bucket
+#   storage-init    one-shot: creates the warehouse / landing / checkpoints buckets
 #   postgres        backing store for the Iceberg catalog                :5432
 #   iceberg-rest    Iceberg REST catalog                                 :8181
 #   spark-master    Spark standalone master                              :8080 UI
 #   spark-worker    Spark standalone worker                              :8081 UI
 #   mosquitto       MQTT broker (TCU -> cloud telemetry)                 :1883
+#   mqtt-bridge     MQTT -> s3://landing (Bronze landing zone)
 #   workspace       dev container / Spark driver                         :4040 Spark job UI
+#   fleet-simulator live telemetry from the simulated fleet  (opt-in: --profile simulate)
 #
-# Credentials below are local-only defaults; override them via environment variables.
+# Credentials and the VIN pseudonymization key below are local-only defaults; override them via
+# environment variables (in production they come from a secret manager).
 # All ports are bound to 127.0.0.1 so nothing is exposed to the network.
 
 name: covesa-lakehouse
@@ -18,6 +21,12 @@ x-s3-env: &s3-env
   AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-lakehouse}
   AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-lakehouse-secret}
   AWS_REGION: us-east-1
+
+x-app-image: &app-image
+  image: covesa-lakehouse/app:local
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile.app
 
 x-spark-image: &spark-image
   image: covesa-lakehouse/spark:3.5.9-iceberg1.10.1
@@ -50,8 +59,10 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >-
-        aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket warehouse 2>/dev/null
-        || aws --endpoint-url http://rustfs:9000 s3 mb s3://warehouse
+        for b in warehouse landing checkpoints; do
+        aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket $$b 2>/dev/null
+        || aws --endpoint-url http://rustfs:9000 s3 mb s3://$$b || exit 1;
+        done
     depends_on:
       rustfs:
         condition: service_healthy
@@ -155,6 +166,8 @@ services:
       LAKEHOUSE_S3_ENDPOINT: http://rustfs:9000
       MQTT_HOST: mosquitto
       MQTT_PORT: "1883"
+      VIN_PSEUDONYMIZATION_KEY: ${VIN_PSEUDONYMIZATION_KEY:-local-dev-only-key-not-for-production}
+      VIN_PSEUDONYMIZATION_KEY_ID: ${VIN_PSEUDONYMIZATION_KEY_ID:-dev-1}
     volumes:
       - ..:/workspace:cached
       - ../.devcontainer:/workspace/.devcontainer:ro
@@ -168,6 +181,32 @@ services:
         condition: service_healthy
       spark-worker:
         condition: service_started
+      mosquitto:
+        condition: service_healthy
+
+  mqtt-bridge:
+    <<: *app-image
+    command: ["python", "-m", "covesa_lakehouse.bronze.mqtt_bridge"]
+    environment:
+      <<: *s3-env
+      LAKEHOUSE_S3_ENDPOINT: http://rustfs:9000
+      MQTT_HOST: mosquitto
+      BRIDGE_CLIENT_ID: bronze-bridge-1   # fixed id = persistent MQTT session across restarts
+    restart: unless-stopped
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+      storage-init:
+        condition: service_completed_successfully
+
+  fleet-simulator:
+    <<: *app-image
+    profiles: ["simulate"]
+    command: ["python", "-m", "covesa_lakehouse.data_generator.generate_telemetry",
+              "--vehicles", "${FLEET_VEHICLES:-44}", "--speedup", "${FLEET_SPEEDUP:-1}"]
+    environment:
+      MQTT_HOST: mosquitto
+    depends_on:
       mosquitto:
         condition: service_healthy
 

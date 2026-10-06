@@ -3,22 +3,12 @@
 Run inside the workspace container with the compose stack up:  uv run pytest -m integration
 """
 
-from collections.abc import Iterator
 from uuid import uuid4
 
 import pytest
 from pyspark.sql import SparkSession
 
-from covesa_lakehouse.common.spark_session import LakehouseConfig, get_spark
-
 pytestmark = pytest.mark.integration
-
-
-@pytest.fixture(scope="module")
-def spark() -> Iterator[SparkSession]:
-    session = get_spark(LakehouseConfig.from_env(app_name="phase0-smoke-test"))
-    yield session
-    session.stop()
 
 
 def test_iceberg_round_trip_on_object_storage(spark: SparkSession) -> None:
@@ -30,7 +20,7 @@ def test_iceberg_round_trip_on_object_storage(spark: SparkSession) -> None:
     try:
         rows = [
             ("VIN0001", "Vehicle.Speed", 87.5),
-            ("VIN0001", "Vehicle.Powertrain.TractionBattery.Voltage", 402.1),
+            ("VIN0001", "Vehicle.Powertrain.TractionBattery.CurrentVoltage", 402.1),
             ("VIN0002", "Vehicle.Powertrain.TractionBattery.Temperature.Max", 32.0),
         ]
         spark.createDataFrame(rows, "vin STRING, vss_path STRING, val_double DOUBLE").writeTo(

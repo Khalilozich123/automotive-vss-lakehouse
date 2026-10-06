@@ -5,7 +5,7 @@ telemetry is landed, conformed to the [COVESA Vehicle Signal Specification](http
 and served as analytical marts, on a Medallion lakehouse (Bronze → Silver → Gold) built with
 PySpark and Apache Iceberg.
 
-> Status: **Phase 1 (data simulation & schema sourcing)** complete. See the phase plan below.
+> Status: **Phase 2 (Bronze ingestion)** complete. See the phase plan below.
 
 ## Local stack
 
@@ -18,10 +18,14 @@ Everything runs in Docker; nothing is installed on the host.
 | `iceberg-rest` | Apache Iceberg REST catalog | 8181 |
 | `spark-master` / `spark-worker` | Spark 3.5 standalone cluster | [8080](http://localhost:8080) / [8081](http://localhost:8081) |
 | `mosquitto` | MQTT broker emulating TCU → cloud delivery | 1883 |
+| `mqtt-bridge` | Lands MQTT messages in `s3://landing` (Bronze landing zone) | — |
 | `workspace` | Dev container and Spark driver (Python 3.11, Java 17, uv) | [4040](http://localhost:4040) (job UI) |
+| `fleet-simulator` | Live fleet telemetry, opt-in: `docker compose --profile simulate up -d` | — |
 
 All ports bind to `127.0.0.1`. Default credentials are local-only; override them with the
 `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `CATALOG_DB_USER`, `CATALOG_DB_PASSWORD` environment variables.
+The VIN pseudonymization key (`VIN_PSEUDONYMIZATION_KEY`, `VIN_PSEUDONYMIZATION_KEY_ID`) also has a
+local-only default; in production it would come from a secret manager.
 
 Pinned versions: Spark 3.5.9 · Iceberg 1.10.1 · Python 3.11 · Java 17. The driver (`workspace`) and
 the executors are built from the same `docker/Dockerfile.spark`, so their versions always match.
@@ -145,6 +149,58 @@ This gives the predictive-DTC mart (Phase 4) real precursors to find:
 `--truth` writes every injected anomaly and fault lifecycle to a JSONL file.
 `tests/fixtures/telemetry_sample*.jsonl` is a small captured sample used by the tests.
 
+## Bronze: landing and ingestion
+
+```
+fleet ──MQTT──▶ mqtt-bridge ──JSONL──▶ s3://landing/telemetry/mqtt/dt=…/hour=…/   ┐
+backfills / file drops ─────────────▶ s3://landing/telemetry/batch/…             ┴▶ ingest_raw ──▶ lakehouse.bronze.telemetry_raw
+```
+
+Spark has no maintained MQTT source, so a small **bridge** subscribes to `vehicles/#` and writes
+micro-batches (2,000 messages or 5 s) to an S3 **landing zone**. AWS IoT Core → Firehose → S3
+follows the same pattern. Live data and file drops become the same thing, and **one generic Spark
+job** ingests both.
+
+**Delivery guarantees**
+
+| Hop | Guarantee | How |
+|---|---|---|
+| Vehicle → bridge → landing | at-least-once | QoS 1, persistent MQTT session, and *manual* acks sent only after the batch is written to S3 |
+| Landing → Bronze | exactly-once | Structured Streaming file source (processed files are tracked in the checkpoint) plus atomic Iceberg commits |
+
+Duplicates can enter only at the first hop (a redelivery after a crash, or a TCU resending a
+message). They keep their `msg_id` and are removed in Silver. Bronze keeps everything.
+
+**`lakehouse.bronze.telemetry_raw`** (Iceberg v2, partitioned by `days(ingested_at)`, zstd)
+
+| Column | Meaning |
+|---|---|
+| `ingestion_id` | UUID of the Bronze row |
+| `vin`, `vin_key_id` | Keyed pseudonym (HMAC-SHA256) of the VIN, and the id of the key that produced it |
+| `platform_id` | Taken from the MQTT topic, so even unparseable payloads are attributed |
+| `hardware_rev`, `msg_id` | Envelope metadata, lifted only when the payload is valid JSON |
+| `received_at`, `ingested_at` | Landing-writer receive time and Bronze commit time (UTC) |
+| `source_system`, `source_file` | Lineage: `mqtt` or `batch`, and the exact landing object |
+| `payload_sha256` | Hash of the stored payload, for audits and replay checks |
+| `raw_payload` | The payload exactly as received, except that the VIN is replaced by its pseudonym |
+
+**Privacy by design.** The VIN is pseudonymized with **HMAC-SHA256 under a secret key**, not a
+plain SHA-256. VINs have a small, structured search space (manufacturer prefix, model year,
+6-digit serial), so an unkeyed hash can be reversed by brute force. The pseudonym is computed as a
+native Spark expression implementing RFC 2104 (no Python UDF) and is tested against Python's
+`hmac`. The VIN is replaced **inside `raw_payload` too**, so no raw VIN reaches the lakehouse.
+Rotating the key is traceable through `vin_key_id`.
+
+```bash
+uv run python -m covesa_lakehouse.bronze.ingest_raw                # drain new landing files, then stop
+uv run python -m covesa_lakehouse.bronze.ingest_raw --continuous   # keep streaming (30 s micro-batches)
+uv run python -m covesa_lakehouse.bronze.landing upload my_backfill.jsonl   # file drop
+```
+
+**Measured locally:** one simulated fleet-day (22 vehicles at 1 Hz: 1.9 M messages, 1 GB of
+JSONL) was ingested in **68 s end to end, about 28 k rows/s**, on a single 4-core Spark worker,
+including JVM start-up.
+
 ## Repository layout
 
 ```
@@ -168,7 +224,12 @@ This gives the predictive-DTC mart (Phase 4) real precursors to find:
 │  │  ├─ faults.py              # precursor → DTC fault scenarios
 │  │  ├─ payloads.py            # contract-driven encoding + anomaly injection
 │  │  └─ generate_telemetry.py  # multi-threaded fleet CLI (MQTT / JSONL / stdout)
-│  └─ bronze/ silver/ gold/     # Phases 2–4
+│  ├─ bronze/
+│  │  ├─ mqtt_bridge.py         # MQTT -> landing zone (persistent session, ack after write)
+│  │  ├─ landing.py             # landing-zone layout, S3 writer, file-drop upload CLI
+│  │  ├─ pseudonymize.py        # keyed HMAC-SHA256 VIN pseudonyms as a Spark expression
+│  │  └─ ingest_raw.py          # generic Structured Streaming ingest into Iceberg Bronze
+│  └─ silver/ gold/             # Phases 3–4
 └─ tests/
    ├─ unit/                     # no external services needed (run in CI)
    ├─ integration/              # need the compose stack (marker: integration)
@@ -181,8 +242,8 @@ This gives the predictive-DTC mart (Phase 4) real precursors to find:
 |---|---|---|
 | 0 | Dockerized lakehouse + CI | ✅ |
 | 1 | DBC → YAML contracts, MQTT telemetry generator | ✅ |
-| 2 | Bronze: generic append-only ingestion with lineage | ⏳ |
-| 3 | Silver: contract-driven conformance engine + DLQ | |
+| 2 | Bronze: generic append-only ingestion with lineage | ✅ |
+| 3 | Silver: contract-driven conformance engine + DLQ | ⏳ |
 | 4 | Gold: battery SoH, predictive DTC, eco-driving marts | |
 | 5 | Orchestration, tests, quality gates | |
 | 6 | Dashboard, benchmarks, one-command demo | |
