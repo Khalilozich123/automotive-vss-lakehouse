@@ -1,0 +1,12 @@
+platform_id: TOYOTA_PRIUS_GEN3
+platform_name: Toyota Prius 3rd generation (XW30) hybrid powertrain bus
+powertrain: HEV
+encoding: json
+dbc: toyota_prius_2010_pt.dbc
+hardware_revs: [DCM-TY10/FW1.8.2, DCM-TY10/FW1.9.0]
+signals:
+  - { dbc: SPEED.SPEED,                    vss: Vehicle.Speed }                      # mph -> km/h
+  - { dbc: POWERTRAIN.ENGINE_RPM,          vss: Vehicle.Powertrain.CombustionEngine.Speed }
+  - { dbc: GAS_PEDAL.GAS_PEDAL,            vss: Vehicle.Chassis.Accelerator.PedalPosition, source_unit: ratio }
+  - { dbc: ACCELEROMETER.ACCEL_X,          vss: Vehicle.Acceleration.Longitudinal }
+  - { dbc: STEER_ANGLE_SENSOR.STEER_ANGLE, vss: Vehicle.Chassis.SteeringWheel.Angle }

@@ -1,0 +1,13 @@
+platform_id: BMW_E9X
+platform_name: BMW E9x / E8x (3 Series E90-E93, 1 Series E81-E88)
+powertrain: ICE
+encoding: can_frame
+dbc: bmw_e9x_e8x.dbc
+hardware_revs: [JBE-E9X/FW14.3]
+signals:
+  - { dbc: Speed.VehicleSpeed,              vss: Vehicle.Speed }
+  - { dbc: AccPedal.EngineSpeed,            vss: Vehicle.Powertrain.CombustionEngine.Speed }
+  - { dbc: AccPedal.AcceleratorPedalPercentage, vss: Vehicle.Chassis.Accelerator.PedalPosition, source_unit: percent }
+  - { dbc: EngineData.TEMP_ENG,             vss: Vehicle.Powertrain.CombustionEngine.EngineCoolant.Temperature }
+  - { dbc: EngineAndBrake.EngineTorque,     vss: Vehicle.Powertrain.CombustionEngine.Torque, source_unit: Nm }
+  - { dbc: SteeringWheelAngle.SteeringPosition, vss: Vehicle.Chassis.SteeringWheel.Angle }

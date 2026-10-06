@@ -1,0 +1,10 @@
+platform_id: GWM_HAVAL_H6_PHEV
+platform_name: Great Wall Haval H6 PHEV (2024)
+powertrain: PHEV
+encoding: json
+dbc: gwm_haval_h6_phev_2024.dbc
+hardware_revs: [TBOX-GWM24/FW1.0.7]
+# Most signals in the community DBC for this platform are still unidentified ("REQ_REVIEW_*"),
+# so only the confirmed speed signal is mapped. Sparse coverage is itself realistic.
+signals:
+  - { dbc: SPEED2.SPEED_REAL, vss: Vehicle.Speed, source_unit: km/h }

@@ -1,0 +1,14 @@
+platform_id: STELLANTIS_FCA_GIORGIO
+platform_name: Stellantis / FCA Giorgio platform (Alfa Romeo Giulia, Stelvio)
+powertrain: ICE
+encoding: json
+dbc: fca_giorgio.dbc
+hardware_revs: [TBM-GIORGIO/FW5.0.3]
+signals:
+  - { dbc: ABS_6.VEHICLE_SPEED,  vss: Vehicle.Speed, source_unit: m/s }   # unit missing in DBC; same scaling as NEW_MSG_11C (m/s)
+  - { dbc: ENGINE_1.ENGINE_RPM,  vss: Vehicle.Powertrain.CombustionEngine.Speed }
+  - { dbc: ENGINE_1.ACCEL_PEDAL, vss: Vehicle.Chassis.Accelerator.PedalPosition }
+  - { dbc: ABS_2.LONG_ACCEL,     vss: Vehicle.Acceleration.Longitudinal }
+  - { dbc: ABS_2.LATERAL_ACCEL,  vss: Vehicle.Acceleration.Lateral }
+  - { dbc: ABS_2.YAW_RATE,       vss: Vehicle.AngularVelocity.Yaw }       # rad/s with a negative scale factor
+  - { dbc: EPS_1.STEERING_ANGLE, vss: Vehicle.Chassis.SteeringWheel.Angle }

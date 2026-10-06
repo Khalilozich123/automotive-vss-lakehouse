@@ -1,0 +1,23 @@
+platform_id: RENAULT_CMF_EV
+platform_name: Renault CMF-EV architecture (Megane E-Tech Electric) - SYNTHETIC
+powertrain: BEV
+encoding: json
+dbc: synthetic/renault_cmf_ev.dbc   # hand-written, NOT a real Renault database (see the file header)
+hardware_revs: [TCU-CMF/FW1.2.0, TCU-CMF/FW1.3.2]
+signals:
+  - { dbc: BMS_PACK.bms_pack_volt_raw, vss: Vehicle.Powertrain.TractionBattery.CurrentVoltage }
+  - { dbc: BMS_PACK.bms_pack_curr_raw, vss: Vehicle.Powertrain.TractionBattery.CurrentCurrent }
+  - { dbc: BMS_PACK.bms_soc_raw,       vss: Vehicle.Powertrain.TractionBattery.StateOfCharge.Current }
+  - { dbc: BMS_CELL.bms_cell_temp_max, vss: Vehicle.Powertrain.TractionBattery.Temperature.Max }
+  - { dbc: BMS_CELL.bms_cell_temp_min, vss: Vehicle.Powertrain.TractionBattery.Temperature.Min }
+  - { dbc: BMS_CELL.bms_cell_volt_max, vss: Vehicle.Powertrain.TractionBattery.CellVoltage.Max }
+  - { dbc: BMS_CELL.bms_cell_volt_min, vss: Vehicle.Powertrain.TractionBattery.CellVoltage.Min }
+  - { dbc: CHARGER.chg_dc_curr_raw,    vss: Vehicle.Powertrain.TractionBattery.Charging.ChargeCurrent.DC }
+  - { dbc: CHARGER.chg_active,         vss: Vehicle.Powertrain.TractionBattery.Charging.IsCharging }
+  - { dbc: VEH_DYN.veh_spd_kph,        vss: Vehicle.Speed }
+  - { dbc: VEH_DYN.veh_long_accel,     vss: Vehicle.Acceleration.Longitudinal }
+  - { dbc: VEH_DYN.veh_odometer,       vss: Vehicle.TraveledDistance }
+  - { dbc: EMOT.emot_speed_rpm,        vss: Vehicle.Powertrain.ElectricMotor.Front.Speed }
+  - { dbc: EMOT.emot_torque_nm,        vss: Vehicle.Powertrain.ElectricMotor.Front.Torque }
+  - { dbc: PEDALS.accel_pedal_pct,     vss: Vehicle.Chassis.Accelerator.PedalPosition }
+  - { dbc: PEDALS.brake_pedal_pct,     vss: Vehicle.Chassis.Brake.PedalPosition }

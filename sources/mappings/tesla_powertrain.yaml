@@ -1,0 +1,11 @@
+platform_id: TESLA_MODEL_S
+platform_name: Tesla Model S / X (drive inverter powertrain bus)
+powertrain: BEV
+encoding: json
+dbc: tesla_powertrain.dbc
+hardware_revs: [MCU2-TS/FW2026.20.4]
+signals:
+  - { dbc: DI_torque2.DI_vehicleSpeed, vss: Vehicle.Speed }                       # mph -> km/h
+  - { dbc: DI_torque1.DI_motorRPM,     vss: Vehicle.Powertrain.ElectricMotor.Rear.Speed }
+  - { dbc: DI_torque1.DI_torqueMotor,  vss: Vehicle.Powertrain.ElectricMotor.Rear.Torque }
+  - { dbc: DI_torque1.DI_pedalPos,     vss: Vehicle.Chassis.Accelerator.PedalPosition }

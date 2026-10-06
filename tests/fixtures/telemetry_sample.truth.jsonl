@@ -1,0 +1,267 @@
+{"ts": "2026-09-01T07:02:00+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "708803b9-de84-41e2-8d90-d254dbe345d8", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:00:20+00:00", "vin": "VF3A3J101FU986839", "msg_id": "424ae3a3-66bc-4846-8cdc-5bef5b391d14", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:02:00+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "708803b9-de84-41e2-8d90-d254dbe345d8", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:00:20+00:00", "vin": "VF3A3J101FU986839", "msg_id": "424ae3a3-66bc-4846-8cdc-5bef5b391d14", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:00:40+00:00", "vin": "WVWJ3VMV2E5424921", "msg_id": "5f9d543a-315d-4fbe-b994-2eae10b294d6", "event": "anomaly", "value": "late_arrival", "delay_s": 281.8}
+{"ts": "2026-09-01T07:02:40+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "1937493e-5d3c-48fd-b502-e4c2a02ce70b", "event": "anomaly", "value": "out_of_range", "signal": "EngineSpeed", "vss_path": "Vehicle.Powertrain.CombustionEngine.Speed", "physical": 16383.75}
+{"ts": "2026-09-01T07:01:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "987e2bc8-547d-4d78-b210-c30c68293169", "event": "anomaly", "value": "out_of_range", "signal": "STEERING_ANGLE", "vss_path": "Vehicle.Chassis.SteeringWheel.Angle", "physical": 1701.6}
+{"ts": "2026-09-01T07:01:40+00:00", "vin": "WVWJ3VMV2E5424921", "msg_id": "14379058-4469-4964-bb52-b54771e3fd73", "event": "anomaly", "value": "corrupt_payload", "kind": "short_frame"}
+{"ts": "2026-09-01T07:02:00+00:00", "vin": "LGXATTY29KB735508", "msg_id": "4e52cc29-d5bf-4afa-bd26-eefe251ba5cb", "event": "anomaly", "value": "stuck_value", "signal": "BRAKE_PEDAL", "messages": 98}
+{"ts": "2026-09-01T07:02:00+00:00", "vin": "JTDWJB893SH470498", "msg_id": "54893b0c-de63-4f64-956b-32a4e125f604", "event": "anomaly", "value": "stuck_value", "signal": "ENGINE_RPM", "messages": 106}
+{"ts": "2026-09-01T07:03:44+00:00", "vin": "WBAGRBMX5TU967558", "event": "scenario_started", "value": "misfire"}
+{"ts": "2026-09-01T07:02:20+00:00", "vin": "WVWJ3VMV2E5424921", "msg_id": "ec32a8a0-d2f9-445a-b7a5-501136a2f3cf", "event": "anomaly", "value": "out_of_range", "signal": "MO_Kuehlmittel_Temp", "vss_path": "Vehicle.Powertrain.CombustionEngine.EngineCoolant.Temperature", "physical": -48.0}
+{"ts": "2026-09-01T07:02:32+00:00", "vin": "1G166Y747LR021503", "event": "scenario_started", "value": "ecm_comm_loss"}
+{"ts": "2026-09-01T07:04:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "63922a37-72a7-487a-bf57-f080ca627b66", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:04:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "63922a37-72a7-487a-bf57-f080ca627b66", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:04:40+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "ba7817b6-ecef-4b53-a405-3ac0d21a2c95", "event": "anomaly", "value": "missing_signal", "signal": "SPEED_REAL"}
+{"ts": "2026-09-01T07:03:20+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "14b8bd92-866c-44d6-a499-d45ef99716a9", "event": "anomaly", "value": "out_of_range", "signal": "accel_pedal_pct", "vss_path": "Vehicle.Chassis.Accelerator.PedalPosition", "physical": 124.0}
+{"ts": "2026-09-01T07:03:20+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "7dc606bc-f0a8-4370-97e0-605b062b0c34", "event": "anomaly", "value": "missing_signal", "signal": "ACCEL_PEDAL"}
+{"ts": "2026-09-01T07:03:20+00:00", "vin": "WVWJ3VMV2E5424921", "msg_id": "c1689c0f-1690-4f02-b2e1-9f57ad40617d", "event": "anomaly", "value": "corrupt_payload", "kind": "short_frame"}
+{"ts": "2026-09-01T07:05:20+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "84af2f12-3274-4e5f-bdd7-e2737afcd873", "event": "anomaly", "value": "missing_signal", "signal": "DI_motorRPM"}
+{"ts": "2026-09-01T07:05:33+00:00", "vin": "KMH31LRG2HR589812", "event": "scenario_started", "value": "ecm_comm_loss"}
+{"ts": "2026-09-01T07:05:00+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "0fb6f704-03a8-4f9b-b435-529e5dce4515", "event": "anomaly", "value": "out_of_range", "signal": "emot_speed_rpm", "vss_path": "Vehicle.Powertrain.ElectricMotor.Front.Speed", "physical": 29165.0}
+{"ts": "2026-09-01T07:07:40+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "fad7174d-1810-4a46-978f-67eecc15d07d", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:05:20+00:00", "vin": "1G166Y747LR021503", "msg_id": "de0e4b2d-5619-4807-aae5-ff4f02a696ea", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:07:40+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "fad7174d-1810-4a46-978f-67eecc15d07d", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:07:27+00:00", "vin": "VF3A3J101FU986839", "event": "scenario_started", "value": "ecm_comm_loss"}
+{"ts": "2026-09-01T07:05:20+00:00", "vin": "1G166Y747LR021503", "msg_id": "de0e4b2d-5619-4807-aae5-ff4f02a696ea", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:07:20+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "234c3f33-fbfb-4689-8826-293606908b97", "event": "anomaly", "value": "stuck_value", "signal": "DI_pedalPos", "messages": 92}
+{"ts": "2026-09-01T07:05:44+00:00", "vin": "1G166Y747LR021503", "event": "dtc_raised", "value": "U0100"}
+{"ts": "2026-09-01T07:08:40+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "23a25570-ffbf-482a-8b10-f1aa92419ddc", "event": "anomaly", "value": "missing_signal", "signal": "SPEED_REAL"}
+{"ts": "2026-09-01T07:09:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "1af7dd60-33e3-41ab-8121-6fc5fe8592df", "event": "anomaly", "value": "out_of_range", "signal": "SPEED_REAL", "vss_path": "Vehicle.Speed", "physical": 401.0}
+{"ts": "2026-09-01T07:06:23+00:00", "vin": "VF15LLFC0RS450411", "event": "scenario_started", "value": "battery_overtemp"}
+{"ts": "2026-09-01T07:06:40+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "381734b0-0541-462f-a5c6-3dc81a15ea81", "event": "anomaly", "value": "out_of_range", "signal": "STEERING_ANGLE", "vss_path": "Vehicle.Chassis.SteeringWheel.Angle", "physical": -1144.7}
+{"ts": "2026-09-01T07:07:00+00:00", "vin": "LGXATTY29KB735508", "msg_id": "91a4427f-0587-4b68-9a4a-898ef5291f36", "event": "anomaly", "value": "out_of_range", "signal": "GAS_PEDAL", "vss_path": "Vehicle.Chassis.Accelerator.PedalPosition", "physical": 149.0}
+{"ts": "2026-09-01T07:10:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "3afa770a-f4ce-4be4-a946-4ff4e987f026", "event": "anomaly", "value": "missing_signal", "signal": "SPEED_REAL"}
+{"ts": "2026-09-01T07:08:20+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "07ef0b39-534d-48ce-8ba4-943e046589d0", "event": "anomaly", "value": "stuck_value", "signal": "DI_torqueMotor", "messages": 70}
+{"ts": "2026-09-01T07:07:20+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "265f5082-4de5-43a1-aace-708dde0cf5f8", "event": "anomaly", "value": "out_of_range", "signal": "veh_odometer", "vss_path": "Vehicle.TraveledDistance", "physical": 2402122700.0}
+{"ts": "2026-09-01T07:10:40+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "5e417a80-521e-4ad2-965f-192d125f6406", "event": "anomaly", "value": "late_arrival", "delay_s": 102.3}
+{"ts": "2026-09-01T07:11:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "e392dca0-26ea-4fd4-b311-a0d9865ada7d", "event": "anomaly", "value": "late_arrival", "delay_s": 501.2}
+{"ts": "2026-09-01T07:10:53+00:00", "vin": "VF3A3J101FU986839", "event": "dtc_raised", "value": "U0100"}
+{"ts": "2026-09-01T07:09:20+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "1eaf9cf0-f4e9-47d1-9b52-5ede9f1416ef", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:09:20+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "1eaf9cf0-f4e9-47d1-9b52-5ede9f1416ef", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:11:20+00:00", "vin": "VF3A3J101FU986839", "msg_id": "1606ee4d-7634-400a-8841-3755509cdd9e", "event": "anomaly", "value": "late_arrival", "delay_s": 400.7}
+{"ts": "2026-09-01T07:07:40+00:00", "vin": "WVWJ3VMV2E5424921", "msg_id": "27cbf639-2d1f-46e5-9181-8e66967351c6", "event": "anomaly", "value": "missing_signal", "frame_id": 289, "signals": ["MO_Fahrpedalrohwert_01"]}
+{"ts": "2026-09-01T07:12:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "786098aa-41a0-485d-a11a-b245349ed0e5", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:12:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "786098aa-41a0-485d-a11a-b245349ed0e5", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:10:00+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "90e6dbe8-9cff-4142-b85b-126d73e36d23", "event": "anomaly", "value": "out_of_range", "signal": "AcceleratorPedalPercentage", "vss_path": "Vehicle.Chassis.Accelerator.PedalPosition", "physical": 2621.4}
+{"ts": "2026-09-01T07:08:40+00:00", "vin": "LGXATTY29KB735508", "msg_id": "ffb47577-5fa9-40f2-92c5-c00b878de633", "event": "anomaly", "value": "out_of_range", "signal": "GAS_PEDAL", "vss_path": "Vehicle.Chassis.Accelerator.PedalPosition", "physical": -42.0}
+{"ts": "2026-09-01T07:10:20+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "61a1a48c-279c-4598-8672-d9b0c1f3fb6d", "event": "anomaly", "value": "out_of_range", "signal": "DI_vehicleSpeed", "vss_path": "Vehicle.Speed", "physical": 308.028}
+{"ts": "2026-09-01T07:12:58+00:00", "vin": "VF3A3J101FU986839", "event": "dtc_cleared", "value": "U0100"}
+{"ts": "2026-09-01T07:10:59+00:00", "vin": "KMH31LRG2HR589812", "event": "dtc_raised", "value": "U0100"}
+{"ts": "2026-09-01T07:13:40+00:00", "vin": "VF3A3J101FU986839", "msg_id": "68ba5ea8-dfab-47d0-90ab-3e97593a8dc9", "event": "anomaly", "value": "stuck_value", "signal": "GAS_PEDAL", "messages": 21}
+{"ts": "2026-09-01T07:13:42+00:00", "vin": "VF3A3J101FU986839", "event": "scenario_started", "value": "low_system_voltage"}
+{"ts": "2026-09-01T07:10:00+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "f181cb16-44e7-4c4d-883b-fe3391d17009", "event": "anomaly", "value": "stuck_value", "signal": "emot_speed_rpm", "messages": 50}
+{"ts": "2026-09-01T07:14:20+00:00", "vin": "VF3A3J101FU986839", "msg_id": "c85787c2-93cc-40e5-8020-5b9baa19b98a", "event": "anomaly", "value": "corrupt_payload", "kind": "short_frame"}
+{"ts": "2026-09-01T07:10:21+00:00", "vin": "1G166Y747LR021503", "event": "dtc_cleared", "value": "U0100"}
+{"ts": "2026-09-01T07:15:20+00:00", "vin": "VF3A3J101FU986839", "msg_id": "a4b2b522-0db8-4508-b07e-76c0faee9fe3", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 86}
+{"ts": "2026-09-01T07:16:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "4b9d8640-9c81-426d-b388-c755669d4c11", "event": "anomaly", "value": "out_of_range", "signal": "SPEED_REAL", "vss_path": "Vehicle.Speed", "physical": -92.0}
+{"ts": "2026-09-01T07:16:40+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "789b16e6-7728-41c9-8050-a8903f3368e1", "event": "anomaly", "value": "stuck_value", "signal": "SPEED_REAL", "messages": 118}
+{"ts": "2026-09-01T07:13:10+00:00", "vin": "WBAGRBMX5TU967558", "event": "dtc_raised", "value": "P0300"}
+{"ts": "2026-09-01T07:13:20+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "0000e1be-5b07-4302-9cc0-b2bed54d72fc", "event": "anomaly", "value": "missing_signal", "frame_id": 170, "signals": ["AcceleratorPedalPercentage", "EngineSpeed"]}
+{"ts": "2026-09-01T07:13:40+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "fd0da332-b39c-44e1-b897-5e96ffb8155e", "event": "anomaly", "value": "out_of_range", "signal": "CF_Clu_Vanz", "vss_path": "Vehicle.Speed", "physical": 309.0}
+{"ts": "2026-09-01T07:12:40+00:00", "vin": "JTDWJB893SH470498", "msg_id": "acc9c28a-e8c5-4bfa-a522-8730fdacc356", "event": "anomaly", "value": "out_of_range", "signal": "ACCEL_X", "vss_path": "Vehicle.Acceleration.Longitudinal", "physical": -19.611}
+{"ts": "2026-09-01T07:13:00+00:00", "vin": "1G166Y747LR021503", "msg_id": "2a6fc057-e552-487f-bc20-234575559e34", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 165}
+{"ts": "2026-09-01T07:14:34+00:00", "vin": "KMH31LRG2HR589812", "event": "dtc_cleared", "value": "U0100"}
+{"ts": "2026-09-01T07:13:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "c2a69898-4fbb-4a65-aeb4-5198084d6a85", "event": "anomaly", "value": "out_of_range", "signal": "YAW_RATE", "vss_path": "Vehicle.AngularVelocity.Yaw", "physical": -340.119}
+{"ts": "2026-09-01T07:14:40+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "79b569ef-2523-4d0d-92de-c82cbdfef636", "event": "anomaly", "value": "out_of_range", "signal": "CR_Fatc_OutTemp", "vss_path": "Vehicle.Exterior.AirTemperature", "physical": -76.5}
+{"ts": "2026-09-01T07:19:40+00:00", "vin": "VF3A3J101FU986839", "msg_id": "d93210b2-1c1c-4033-8dd2-5bcfa91a6fb2", "event": "anomaly", "value": "corrupt_payload", "kind": "short_frame"}
+{"ts": "2026-09-01T07:15:00+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "e375e5f6-c846-493e-a4e9-d252b4e7fbdc", "event": "anomaly", "value": "out_of_range", "signal": "DI_motorRPM", "vss_path": "Vehicle.Powertrain.ElectricMotor.Rear.Speed", "physical": 34067.0}
+{"ts": "2026-09-01T07:13:40+00:00", "vin": "1G166Y747LR021503", "msg_id": "e98cd1f7-6e5a-4436-a061-1ca7de783855", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 29}
+{"ts": "2026-09-01T07:14:00+00:00", "vin": "JTDWJB893SH470498", "msg_id": "32dc0f25-f98c-4d85-af67-bc85bd6c30d7", "event": "anomaly", "value": "stuck_value", "signal": "GAS_PEDAL", "messages": 39}
+{"ts": "2026-09-01T07:15:40+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "ef7b5f29-eebf-40c9-b1b9-60838c34dac9", "event": "anomaly", "value": "out_of_range", "signal": "DI_pedalPos", "vss_path": "Vehicle.Chassis.Accelerator.PedalPosition", "physical": 136.0}
+{"ts": "2026-09-01T07:21:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "4767da4e-3fd5-4f07-922b-d5d2aed69c4a", "event": "anomaly", "value": "out_of_range", "signal": "SPEED_REAL", "vss_path": "Vehicle.Speed", "physical": 292.0}
+{"ts": "2026-09-01T07:22:19+00:00", "vin": "VF3A3J101FU986839", "event": "dtc_raised", "value": "P0562"}
+{"ts": "2026-09-01T07:15:40+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "35b294a2-a709-41ec-b81f-270ce98a910d", "event": "anomaly", "value": "out_of_range", "signal": "veh_long_accel", "vss_path": "Vehicle.Acceleration.Longitudinal", "physical": 29.52}
+{"ts": "2026-09-01T07:23:00+00:00", "vin": "VF3A3J101FU986839", "msg_id": "bb816519-0d99-413b-874a-cd94d5350473", "event": "anomaly", "value": "stuck_value", "signal": "VITESSE_LACET", "messages": 88}
+{"ts": "2026-09-01T07:23:20+00:00", "vin": "VF3A3J101FU986839", "msg_id": "09232d5d-9778-48fe-bb5c-512b668bbb54", "event": "anomaly", "value": "corrupt_payload", "kind": "short_frame"}
+{"ts": "2026-09-01T07:17:40+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "1ecdeb2a-b711-4c0c-8479-001dcee3090a", "event": "anomaly", "value": "stuck_value", "signal": "PV_AV_CAN", "messages": 67}
+{"ts": "2026-09-01T07:16:20+00:00", "vin": "1G166Y747LR021503", "msg_id": "3e39528b-d107-4572-b874-2c317afa5830", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:18:00+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "ea3d0daa-26ad-4c7b-becb-cbe806687a75", "event": "anomaly", "value": "missing_signal", "frame_id": 168, "signals": ["EngineTorque"]}
+{"ts": "2026-09-01T07:16:20+00:00", "vin": "1G166Y747LR021503", "msg_id": "3e39528b-d107-4572-b874-2c317afa5830", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:16:40+00:00", "vin": "LGXATTY29KB735508", "msg_id": "d8ac3cf0-7871-4bb2-a54d-bc17f57af6fa", "event": "anomaly", "value": "missing_signal", "signal": "STEER_ANGLE_2"}
+{"ts": "2026-09-01T07:18:00+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "10837c05-7f9d-4eb0-b25a-0d83834a6246", "event": "anomaly", "value": "out_of_range", "signal": "DI_motorRPM", "vss_path": "Vehicle.Powertrain.ElectricMotor.Rear.Speed", "physical": -37524.0}
+{"ts": "2026-09-01T07:16:40+00:00", "vin": "1G166Y747LR021503", "msg_id": "332bb42c-198c-4f48-8fc9-05760f9cb3e0", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:18:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "933d6427-662c-4bd0-a0e8-eaa6ceee2cf3", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 59}
+{"ts": "2026-09-01T07:16:40+00:00", "vin": "1G166Y747LR021503", "msg_id": "332bb42c-198c-4f48-8fc9-05760f9cb3e0", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:24:40+00:00", "vin": "VF3A3J101FU986839", "msg_id": "fc6834a2-c715-4ca3-b050-ac4168fafa82", "event": "anomaly", "value": "out_of_range", "signal": "VITESSE_LACET", "vss_path": "Vehicle.AngularVelocity.Yaw", "physical": 3276.7}
+{"ts": "2026-09-01T07:18:40+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "647157f7-2886-4ec5-96d6-9a7e82d29a20", "event": "anomaly", "value": "missing_signal", "frame_id": 170, "signals": ["AcceleratorPedalPercentage", "EngineSpeed"]}
+{"ts": "2026-09-01T07:17:20+00:00", "vin": "JTDWJB893SH470498", "msg_id": "c2445863-252e-4fab-8fb3-35563b76a9da", "event": "anomaly", "value": "stuck_value", "signal": "STEER_ANGLE", "messages": 96}
+{"ts": "2026-09-01T07:19:00+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "aded09e0-f3be-4703-b7fe-f3881271dfb0", "event": "anomaly", "value": "out_of_range", "signal": "TEMP_ENG", "vss_path": "Vehicle.Powertrain.CombustionEngine.EngineCoolant.Temperature", "physical": 180.0}
+{"ts": "2026-09-01T07:19:40+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "21a167e7-74a7-42ce-8f8c-7a008fc97cf2", "event": "anomaly", "value": "missing_signal", "frame_id": 168, "signals": ["EngineTorque"]}
+{"ts": "2026-09-01T07:18:20+00:00", "vin": "LGXATTY29KB735508", "msg_id": "1b0555c2-5582-4497-9b4b-29f83cde2c3e", "event": "anomaly", "value": "missing_signal", "signal": "WHEELSPEED_CLEAN"}
+{"ts": "2026-09-01T07:27:20+00:00", "vin": "VF3A3J101FU986839", "msg_id": "7dea89b5-fdf1-49d8-8022-ee2d9c409f7e", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 502}
+{"ts": "2026-09-01T07:27:40+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "3cc402fc-3bfe-46ff-8bff-104c61378bab", "event": "anomaly", "value": "out_of_range", "signal": "SPEED_REAL", "vss_path": "Vehicle.Speed", "physical": -112.0}
+{"ts": "2026-09-01T07:19:20+00:00", "vin": "LGXATTY29KB735508", "msg_id": "14f35473-b708-47e2-9b89-2b633dcb611b", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:19:20+00:00", "vin": "LGXATTY29KB735508", "msg_id": "14f35473-b708-47e2-9b89-2b633dcb611b", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:20:40+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "1c307209-469f-4e59-830e-3f707d60f8cd", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 275}
+{"ts": "2026-09-01T07:19:20+00:00", "vin": "JTDWJB893SH470498", "msg_id": "3785fd3f-e65f-426e-ad64-a3ffe44dd80f", "event": "anomaly", "value": "out_of_range", "signal": "SPEED", "vss_path": "Vehicle.Speed", "physical": -26.352}
+{"ts": "2026-09-01T07:21:00+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "84d1de00-2032-4789-bc41-40d747fafaf4", "event": "anomaly", "value": "late_arrival", "delay_s": 377.7}
+{"ts": "2026-09-01T07:21:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "fa2d16bf-6c7e-4960-9fdd-ceaf28327ab5", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:21:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "fa2d16bf-6c7e-4960-9fdd-ceaf28327ab5", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:20:00+00:00", "vin": "1G166Y747LR021503", "msg_id": "defaec7b-a76c-4a0c-909b-ed44788df54f", "event": "anomaly", "value": "missing_signal", "signal": "Temp_A"}
+{"ts": "2026-09-01T07:20:11+00:00", "vin": "VF15LLFC0RS450411", "event": "dtc_raised", "value": "P0A7E"}
+{"ts": "2026-09-01T07:20:20+00:00", "vin": "1G166Y747LR021503", "msg_id": "6d6f3877-55d5-44ef-b794-df6f04f7042d", "event": "anomaly", "value": "out_of_range", "signal": "Pack_Voltage", "vss_path": "Vehicle.Powertrain.TractionBattery.CurrentVoltage", "physical": 1221.625}
+{"ts": "2026-09-01T07:31:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "3762adcd-a219-42e3-a093-aa4710f7152f", "event": "anomaly", "value": "out_of_range", "signal": "SPEED_REAL", "vss_path": "Vehicle.Speed", "physical": 295.0}
+{"ts": "2026-09-01T07:31:20+00:00", "vin": "VF3A3J101FU986839", "msg_id": "dc80f248-20b7-4684-9e18-7f6248eee086", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:21:20+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "07d40a06-79c7-4d84-bc2d-05e380ce4cae", "event": "anomaly", "value": "missing_signal", "signal": "chg_dc_curr_raw"}
+{"ts": "2026-09-01T07:31:20+00:00", "vin": "VF3A3J101FU986839", "msg_id": "dc80f248-20b7-4684-9e18-7f6248eee086", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:31:40+00:00", "vin": "VF3A3J101FU986839", "msg_id": "3fec4933-4179-4cd8-9865-2aa84c6e39d3", "event": "anomaly", "value": "late_arrival", "delay_s": 350.8}
+{"ts": "2026-09-01T07:21:40+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "c9e57189-6148-4bfe-9d0a-cd873912ff61", "event": "anomaly", "value": "stuck_value", "signal": "emot_speed_rpm", "messages": 66}
+{"ts": "2026-09-01T07:22:20+00:00", "vin": "LGXATTY29KB735508", "msg_id": "1912181c-9c75-4bcb-9121-710b13091924", "event": "anomaly", "value": "stuck_value", "signal": "WHEELSPEED_CLEAN", "messages": 52}
+{"ts": "2026-09-01T07:33:20+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "37a51a4b-3ed2-43f4-a6e7-6bf55b5644c7", "event": "anomaly", "value": "stuck_value", "signal": "SPEED_REAL", "messages": 84}
+{"ts": "2026-09-01T07:22:20+00:00", "vin": "WVWJ3VMV2E5424921", "msg_id": "df77a497-29cc-4e9f-8cba-1c8f4bde3299", "event": "anomaly", "value": "out_of_range", "signal": "MO_Drehzahl_01", "vss_path": "Vehicle.Powertrain.CombustionEngine.Speed", "physical": 16383.75}
+{"ts": "2026-09-01T07:23:20+00:00", "vin": "LGXATTY29KB735508", "msg_id": "6d003259-b389-49b6-b448-ea1a5c1d5c61", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:23:20+00:00", "vin": "LGXATTY29KB735508", "msg_id": "6d003259-b389-49b6-b448-ea1a5c1d5c61", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:35:00+00:00", "vin": "VF3A3J101FU986839", "msg_id": "9b90a0a0-8ee8-4c60-80d9-a7b6a8ee7bf3", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:23:40+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "023f4464-752f-4d92-849d-f4bcb6a14816", "event": "anomaly", "value": "out_of_range", "signal": "LATERAL_ACCEL", "vss_path": "Vehicle.Acceleration.Lateral", "physical": 28.94}
+{"ts": "2026-09-01T07:35:00+00:00", "vin": "VF3A3J101FU986839", "msg_id": "9b90a0a0-8ee8-4c60-80d9-a7b6a8ee7bf3", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:24:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "6fbeac96-a1d2-4c53-ac5a-45f595c412be", "event": "anomaly", "value": "late_arrival", "delay_s": 411.8}
+{"ts": "2026-09-01T07:35:45+00:00", "vin": "VF3A3J101FU986839", "event": "dtc_cleared", "value": "P0562"}
+{"ts": "2026-09-01T07:24:40+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "32751bc7-117d-4b00-916e-97e4727ca4e8", "event": "anomaly", "value": "missing_signal", "signal": "bms_cell_temp_min"}
+{"ts": "2026-09-01T07:26:40+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "15ea1adf-4446-47e4-a825-a3a41a412532", "event": "anomaly", "value": "out_of_range", "signal": "SteeringPosition", "vss_path": "Vehicle.Chassis.SteeringWheel.Angle", "physical": -1403.509}
+{"ts": "2026-09-01T07:25:00+00:00", "vin": "1G166Y747LR021503", "msg_id": "4341222c-05f3-4032-b8ba-ede474b9d977", "event": "anomaly", "value": "stuck_value", "signal": "Pack_Voltage", "messages": 103}
+{"ts": "2026-09-01T07:25:20+00:00", "vin": "1G166Y747LR021503", "msg_id": "f839d070-9bea-44c9-a210-e45f18fa688a", "event": "anomaly", "value": "missing_signal", "signal": "Pack_Voltage"}
+{"ts": "2026-09-01T07:37:40+00:00", "vin": "VF3A3J101FU986839", "msg_id": "d8234c96-367e-40b1-96c1-0ef79b53aede", "event": "anomaly", "value": "late_arrival", "delay_s": 193.1}
+{"ts": "2026-09-01T07:25:40+00:00", "vin": "JTDWJB893SH470498", "event": "scenario_started", "value": "battery_overtemp"}
+{"ts": "2026-09-01T07:25:40+00:00", "vin": "1G166Y747LR021503", "msg_id": "037195f6-c287-44f5-ac6e-71d19ec24e30", "event": "anomaly", "value": "stuck_value", "signal": "Temp_A", "messages": 99}
+{"ts": "2026-09-01T07:25:40+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "a0c46462-bfa3-4659-b670-fad063cf604e", "event": "anomaly", "value": "out_of_range", "signal": "ENGINE_RPM", "vss_path": "Vehicle.Powertrain.CombustionEngine.Speed", "physical": -4301.0}
+{"ts": "2026-09-01T07:26:20+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "aafa61f3-b672-491e-a204-d6db38596bf7", "event": "anomaly", "value": "stuck_value", "signal": "veh_odometer", "messages": 23}
+{"ts": "2026-09-01T07:28:00+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "ddf7cce0-9beb-4a0b-8705-1df54865ef17", "event": "anomaly", "value": "missing_signal", "frame_id": 168, "signals": ["EngineTorque"]}
+{"ts": "2026-09-01T07:39:11+00:00", "vin": "LGW19DA86MJ891103", "event": "scenario_started", "value": "low_system_voltage"}
+{"ts": "2026-09-01T07:26:29+00:00", "vin": "VF15LLFC0RS450411", "event": "dtc_cleared", "value": "P0A7E"}
+{"ts": "2026-09-01T07:28:03+00:00", "vin": "WBAGRBMX5TU967558", "event": "dtc_cleared", "value": "P0300"}
+{"ts": "2026-09-01T07:39:20+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "c855dac2-ae44-4c27-8fba-7aa49540f3fb", "event": "anomaly", "value": "missing_signal", "signal": "SPEED_REAL"}
+{"ts": "2026-09-01T07:26:55+00:00", "vin": "VF15LLFC0RS450411", "event": "scenario_started", "value": "battery_overtemp"}
+{"ts": "2026-09-01T07:28:20+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "a0e01817-f65f-4fef-8745-50263d1c0f6e", "event": "anomaly", "value": "missing_signal", "signal": "DI_vehicleSpeed"}
+{"ts": "2026-09-01T07:39:40+00:00", "vin": "VF3A3J101FU986839", "msg_id": "578cddb7-465a-46ee-9c5a-696bfddc92d0", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:28:40+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "e75774e5-3587-4e18-b2bc-9e488dba594a", "event": "anomaly", "value": "stuck_value", "signal": "TEMP_ENG", "messages": 82}
+{"ts": "2026-09-01T07:39:40+00:00", "vin": "VF3A3J101FU986839", "msg_id": "578cddb7-465a-46ee-9c5a-696bfddc92d0", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:40:20+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "fa551880-27d7-4ca4-b2c3-8fff7c2bf298", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:40:20+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "fa551880-27d7-4ca4-b2c3-8fff7c2bf298", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:27:20+00:00", "vin": "WVWJ3VMV2E5424921", "msg_id": "2916dec8-4bee-470e-bd38-6d1cce70ce8e", "event": "anomaly", "value": "out_of_range", "signal": "MO_Drehzahl_01", "vss_path": "Vehicle.Powertrain.CombustionEngine.Speed", "physical": 16383.75}
+{"ts": "2026-09-01T07:27:40+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "6b6feeac-fead-4271-9c4f-30cc37a32ef5", "event": "anomaly", "value": "missing_signal", "signal": "accel_pedal_pct"}
+{"ts": "2026-09-01T07:28:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "097ada97-f233-4fca-ac83-60a0a509f8bf", "event": "anomaly", "value": "out_of_range", "signal": "ENGINE_RPM", "vss_path": "Vehicle.Powertrain.CombustionEngine.Speed", "physical": 10760.0}
+{"ts": "2026-09-01T07:29:40+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "b95b22b0-11c0-4e80-b18c-3bb8bbfacfb4", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 158}
+{"ts": "2026-09-01T07:42:00+00:00", "vin": "VF3A3J101FU986839", "msg_id": "899b7aa5-a4c1-4764-ab57-8f83dc563240", "event": "anomaly", "value": "missing_signal", "frame_id": 909, "signals": ["ACCEL_LONGI_ROUES", "VITESSE_VEHICULE_ROUES"]}
+{"ts": "2026-09-01T07:29:00+00:00", "vin": "LGXATTY29KB735508", "msg_id": "ac667dcc-9abe-4ad0-b15a-ad0694d96972", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:30:20+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "99a69327-ab04-4cf1-b1a6-883fff26020e", "event": "anomaly", "value": "out_of_range", "signal": "DI_motorRPM", "vss_path": "Vehicle.Powertrain.ElectricMotor.Rear.Speed", "physical": -41031.0}
+{"ts": "2026-09-01T07:29:00+00:00", "vin": "LGXATTY29KB735508", "msg_id": "ac667dcc-9abe-4ad0-b15a-ad0694d96972", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:29:20+00:00", "vin": "JTDWJB893SH470498", "msg_id": "2a3f0158-52ee-40ac-b717-2ec63d4cece8", "event": "anomaly", "value": "missing_signal", "signal": "ACCEL_X"}
+{"ts": "2026-09-01T07:29:40+00:00", "vin": "1G166Y747LR021503", "msg_id": "d9fb8554-4c24-4231-bcc3-1aeffc2f6942", "event": "anomaly", "value": "out_of_range", "signal": "Pack_Voltage", "vss_path": "Vehicle.Powertrain.TractionBattery.CurrentVoltage", "physical": 1061.375}
+{"ts": "2026-09-01T07:31:20+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "3afb0ff8-bfdf-4d0e-bfc6-f8846a0528ec", "event": "anomaly", "value": "missing_signal", "frame_id": 168, "signals": ["EngineTorque"]}
+{"ts": "2026-09-01T07:31:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "b6494578-a103-469d-af48-60d7949cd3ac", "event": "anomaly", "value": "out_of_range", "signal": "CR_Mdps_StrAng", "vss_path": "Vehicle.Chassis.SteeringWheel.Angle", "physical": -1210.9}
+{"ts": "2026-09-01T07:30:00+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "12be8eab-dffc-4d0e-abdc-7f803b179dfa", "event": "anomaly", "value": "missing_signal", "signal": "bms_cell_volt_min"}
+{"ts": "2026-09-01T07:30:20+00:00", "vin": "1G166Y747LR021503", "msg_id": "d180e830-caa8-4307-b5ac-aec996349513", "event": "anomaly", "value": "out_of_range", "signal": "Pack_Voltage", "vss_path": "Vehicle.Powertrain.TractionBattery.CurrentVoltage", "physical": 926.625}
+{"ts": "2026-09-01T07:30:20+00:00", "vin": "JTDWJB893SH470498", "msg_id": "351ee482-15e7-417a-b89a-c1b70c42ca7b", "event": "anomaly", "value": "out_of_range", "signal": "ENGINE_RPM", "vss_path": "Vehicle.Powertrain.CombustionEngine.Speed", "physical": -2118.0}
+{"ts": "2026-09-01T07:32:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "bfce559f-eb1f-462b-b027-1ca14c1a83f0", "event": "anomaly", "value": "missing_signal", "signal": "LONG_ACCEL"}
+{"ts": "2026-09-01T07:45:46+00:00", "vin": "LGW19DA86MJ891103", "event": "dtc_raised", "value": "P0562"}
+{"ts": "2026-09-01T07:46:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "692c975e-5046-4f81-8376-d5267558a3d2", "event": "anomaly", "value": "out_of_range", "signal": "SPEED_REAL", "vss_path": "Vehicle.Speed", "physical": -144.0}
+{"ts": "2026-09-01T07:31:40+00:00", "vin": "1G166Y747LR021503", "msg_id": "0ec9fd86-f20f-40b2-bc2a-08ae4c04d0dc", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 190}
+{"ts": "2026-09-01T07:31:40+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "3c9c6249-19a6-453b-ba2d-36c6d45a880e", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 138}
+{"ts": "2026-09-01T07:47:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "3763bf11-b45f-48a1-9810-f442b72e8a0e", "event": "anomaly", "value": "missing_signal", "signal": "SPEED_REAL"}
+{"ts": "2026-09-01T07:32:00+00:00", "vin": "LGXATTY29KB735508", "msg_id": "4f17d21f-f12d-4b63-bd94-fe731b460b37", "event": "anomaly", "value": "out_of_range", "signal": "STEER_ANGLE_2", "vss_path": "Vehicle.Chassis.SteeringWheel.Angle", "physical": -1056.4}
+{"ts": "2026-09-01T07:32:00+00:00", "vin": "JTDWJB893SH470498", "msg_id": "66eea52c-668f-4d56-a663-da9d7245a7ef", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:32:00+00:00", "vin": "JTDWJB893SH470498", "msg_id": "66eea52c-668f-4d56-a663-da9d7245a7ef", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:47:40+00:00", "vin": "VF3A3J101FU986839", "msg_id": "b694fc23-81c8-474f-8df5-ad6c851e55b0", "event": "anomaly", "value": "out_of_range", "signal": "GAS_PEDAL", "vss_path": "Vehicle.Chassis.Accelerator.PedalPosition", "physical": 127.5}
+{"ts": "2026-09-01T07:34:00+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "b5e1ebbf-0e21-4a52-aa59-01a59da040f2", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:48:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "c44c9dc8-f6e5-4162-ae3c-f6b8a07facd1", "event": "anomaly", "value": "missing_signal", "signal": "SPEED_REAL"}
+{"ts": "2026-09-01T07:34:00+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "b5e1ebbf-0e21-4a52-aa59-01a59da040f2", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:32:40+00:00", "vin": "LGXATTY29KB735508", "msg_id": "18acd764-17b4-4b80-8946-2caeeb26d270", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 224}
+{"ts": "2026-09-01T07:48:20+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "2df0a7e8-44fd-4869-94b3-b61394dbbf87", "event": "anomaly", "value": "out_of_range", "signal": "SPEED_REAL", "vss_path": "Vehicle.Speed", "physical": 398.0}
+{"ts": "2026-09-01T07:34:40+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "d302717a-698e-476e-a780-90ece06fbe38", "event": "anomaly", "value": "missing_signal", "signal": "DI_pedalPos"}
+{"ts": "2026-09-01T07:49:00+00:00", "vin": "VF3A3J101FU986839", "msg_id": "22d91d66-3067-403e-8cba-d4acd77c1094", "event": "anomaly", "value": "out_of_range", "signal": "P000_Com_nEng", "vss_path": "Vehicle.Powertrain.CombustionEngine.Speed", "physical": 8191.875}
+{"ts": "2026-09-01T07:33:20+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "776f6ebd-527a-45a3-812f-06848553dafe", "event": "anomaly", "value": "stuck_value", "signal": "brake_pedal_pct", "messages": 73}
+{"ts": "2026-09-01T07:33:40+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "e6bea879-414b-4328-b3bd-0bab841ad56b", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 177}
+{"ts": "2026-09-01T07:50:20+00:00", "vin": "VF3A3J101FU986839", "msg_id": "f1ca4e48-a4f1-4a8b-b84e-46a3f21993b0", "event": "anomaly", "value": "out_of_range", "signal": "P000_Com_nEng", "vss_path": "Vehicle.Powertrain.CombustionEngine.Speed", "physical": 8191.875}
+{"ts": "2026-09-01T07:36:00+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "1382474e-9f1c-46d5-910b-7de06a4e82fb", "event": "anomaly", "value": "out_of_range", "signal": "CR_Mdps_StrAng", "vss_path": "Vehicle.Chassis.SteeringWheel.Angle", "physical": -1701.8}
+{"ts": "2026-09-01T07:36:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "95c03c69-bc92-4d2f-b0dd-9a782ab0bddb", "event": "anomaly", "value": "out_of_range", "signal": "PV_AV_CAN", "vss_path": "Vehicle.Chassis.Accelerator.PedalPosition", "physical": 124.992}
+{"ts": "2026-09-01T07:34:40+00:00", "vin": "JTDWJB893SH470498", "msg_id": "57dd53a2-e560-4540-bb1b-ab8fe7cdc2e9", "event": "anomaly", "value": "out_of_range", "signal": "ACCEL_X", "vss_path": "Vehicle.Acceleration.Longitudinal", "physical": -30.508}
+{"ts": "2026-09-01T07:51:28+00:00", "vin": "LGW19DA86MJ891103", "event": "dtc_cleared", "value": "P0562"}
+{"ts": "2026-09-01T07:51:40+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "39a4a957-3d78-4405-9a6b-d69796dd51b1", "event": "anomaly", "value": "out_of_range", "signal": "SPEED_REAL", "vss_path": "Vehicle.Speed", "physical": -46.0}
+{"ts": "2026-09-01T07:35:40+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "8231554f-4c90-470d-94a9-dc915016bf82", "event": "anomaly", "value": "missing_signal", "signal": "veh_odometer"}
+{"ts": "2026-09-01T07:35:38+00:00", "vin": "JTDWJB893SH470498", "event": "dtc_raised", "value": "P0A7E"}
+{"ts": "2026-09-01T07:52:40+00:00", "vin": "VF3A3J101FU986839", "msg_id": "db5e7930-36ef-4357-96ce-147e00fbb915", "event": "anomaly", "value": "stuck_value", "signal": "VITESSE_LACET", "messages": 37}
+{"ts": "2026-09-01T07:36:20+00:00", "vin": "1G166Y747LR021503", "msg_id": "383c8fd0-c65d-4924-8465-dd7c434379c2", "event": "anomaly", "value": "missing_signal", "signal": "Pack_Voltage"}
+{"ts": "2026-09-01T07:36:22+00:00", "vin": "1G166Y747LR021503", "event": "scenario_started", "value": "battery_overtemp"}
+{"ts": "2026-09-01T07:38:00+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "9c01490e-5fbe-4486-8195-b2d30dfeeed7", "event": "anomaly", "value": "out_of_range", "signal": "DI_torqueMotor", "vss_path": "Vehicle.Powertrain.ElectricMotor.Rear.Torque", "physical": 1222.75}
+{"ts": "2026-09-01T07:38:36+00:00", "vin": "WBAGRBMX5TU967558", "event": "scenario_started", "value": "low_system_voltage"}
+{"ts": "2026-09-01T07:38:40+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "d34b8f1d-6bd2-4a50-bd0f-2fafe3c4251d", "event": "anomaly", "value": "out_of_range", "signal": "PV_AV_CAN", "vss_path": "Vehicle.Chassis.Accelerator.PedalPosition", "physical": -46.091}
+{"ts": "2026-09-01T07:37:08+00:00", "vin": "VF15LLFC0RS450411", "event": "dtc_raised", "value": "P0A7E"}
+{"ts": "2026-09-01T07:37:20+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "2dacf4b9-8faa-4ace-a2b1-ea2771369405", "event": "anomaly", "value": "late_arrival", "delay_s": 98.5}
+{"ts": "2026-09-01T07:39:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "89e890b5-baed-4996-8002-41aae80caa75", "event": "anomaly", "value": "missing_signal", "signal": "TEMP_ENG"}
+{"ts": "2026-09-01T07:38:00+00:00", "vin": "LGXATTY29KB735508", "msg_id": "bc9a1fde-6fa2-49b8-8e9e-26911a162882", "event": "anomaly", "value": "stuck_value", "signal": "GAS_PEDAL", "messages": 44}
+{"ts": "2026-09-01T07:39:40+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "35720d27-5716-44fe-86b8-be0cb7a45d42", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:56:20+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "74ccd27d-cda4-41b1-aefe-08525d7b3562", "event": "anomaly", "value": "out_of_range", "signal": "SPEED_REAL", "vss_path": "Vehicle.Speed", "physical": -140.0}
+{"ts": "2026-09-01T07:39:40+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "35720d27-5716-44fe-86b8-be0cb7a45d42", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:38:20+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "d8ab9240-7e7a-42fc-a2fe-0c5b71e8e6db", "event": "anomaly", "value": "stuck_value", "signal": "bms_pack_curr_raw", "messages": 54}
+{"ts": "2026-09-01T07:57:00+00:00", "vin": "VF3A3J101FU986839", "msg_id": "2ef027c4-3512-4789-a9db-0278ae919bff", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:57:00+00:00", "vin": "VF3A3J101FU986839", "msg_id": "2ef027c4-3512-4789-a9db-0278ae919bff", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:40:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "534e833e-19fe-496b-9adb-e59ffdd546f5", "event": "anomaly", "value": "out_of_range", "signal": "CR_Fatc_OutTemp", "vss_path": "Vehicle.Exterior.AirTemperature", "physical": 110.5}
+{"ts": "2026-09-01T07:39:00+00:00", "vin": "LGXATTY29KB735508", "msg_id": "341c47e1-d7cd-44a5-a58c-f1e3374be9a7", "event": "anomaly", "value": "out_of_range", "signal": "BRAKE_PEDAL", "vss_path": "Vehicle.Chassis.Brake.PedalPosition", "physical": -15.0}
+{"ts": "2026-09-01T07:41:00+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "f527cda2-3df5-4916-93c1-4cc6f9896705", "event": "anomaly", "value": "out_of_range", "signal": "LONG_ACCEL", "vss_path": "Vehicle.Acceleration.Longitudinal", "physical": -24.28}
+{"ts": "2026-09-01T07:59:00+00:00", "vin": "LGW19DA86MJ891103", "msg_id": "9a57262f-a374-4920-93d8-456613109b4e", "event": "anomaly", "value": "stuck_value", "signal": "SPEED_REAL", "messages": 106}
+{"ts": "2026-09-01T07:41:20+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "ae191a97-3fdb-459f-8920-a31c223ada6f", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 167}
+{"ts": "2026-09-01T07:40:00+00:00", "vin": "WVWJ3VMV2E5424921", "msg_id": "bdf2da6d-d9fc-40aa-b9a6-a4c929008a34", "event": "anomaly", "value": "late_arrival", "delay_s": 379.1}
+{"ts": "2026-09-01T07:40:20+00:00", "vin": "1G166Y747LR021503", "msg_id": "54406f45-e6db-4d47-a64e-845a15529b20", "event": "anomaly", "value": "stuck_value", "signal": "Temp_A", "messages": 92}
+{"ts": "2026-09-01T07:41:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "7e7f3b40-fb32-49b1-b9d4-2730866dc006", "event": "anomaly", "value": "stuck_value", "signal": "LONG_ACCEL", "messages": 56}
+{"ts": "2026-09-01T07:42:40+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "2d85f50d-964d-4205-9377-100b07464d99", "event": "anomaly", "value": "missing_signal", "frame_id": 170, "signals": ["AcceleratorPedalPercentage", "EngineSpeed"]}
+{"ts": "2026-09-01T07:43:00+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "505868c8-6029-4b1a-bca7-0a5d3306e529", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:41:20+00:00", "vin": "JTDWJB893SH470498", "msg_id": "c465de29-e92a-4e2c-9461-a8ff8f53a0ac", "event": "anomaly", "value": "missing_signal", "signal": "SPEED"}
+{"ts": "2026-09-01T07:43:00+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "505868c8-6029-4b1a-bca7-0a5d3306e529", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:42:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "f7845a30-2a12-498a-b1cd-827a402f216e", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:42:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "f7845a30-2a12-498a-b1cd-827a402f216e", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:42:40+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "b7ce28cb-de53-40f4-ace3-615351241d82", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 184}
+{"ts": "2026-09-01T07:42:51+00:00", "vin": "VF15LLFC0RS450411", "event": "dtc_cleared", "value": "P0A7E"}
+{"ts": "2026-09-01T07:44:40+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "3e27a260-7c54-4529-af6e-358a72539a2d", "event": "anomaly", "value": "late_arrival", "delay_s": 37.6}
+{"ts": "2026-09-01T07:43:40+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "1b1aaac9-938f-4bb7-b93a-e1b88393b79f", "event": "anomaly", "value": "stuck_value", "signal": "bms_cell_volt_min", "messages": 74}
+{"ts": "2026-09-01T07:45:00+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "718e96b0-eea7-4f79-8cd0-1d9c3f3a0dae", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:45:00+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "718e96b0-eea7-4f79-8cd0-1d9c3f3a0dae", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:44:20+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "ac8c2512-7c80-4800-a38a-dbe218eb00de", "event": "anomaly", "value": "out_of_range", "signal": "VEHICLE_SPEED", "vss_path": "Vehicle.Speed", "physical": -124.42}
+{"ts": "2026-09-01T07:45:40+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "b23cd2f4-74f3-40b0-b120-ae5e48262212", "event": "anomaly", "value": "out_of_range", "signal": "AcceleratorPedalPercentage", "vss_path": "Vehicle.Chassis.Accelerator.PedalPosition", "physical": 2621.4}
+{"ts": "2026-09-01T07:44:20+00:00", "vin": "JTDWJB893SH470498", "msg_id": "b9a8e651-d010-4194-afed-0bc099bba95b", "event": "anomaly", "value": "late_arrival", "delay_s": 379.6}
+{"ts": "2026-09-01T07:44:40+00:00", "vin": "JTDWJB893SH470498", "msg_id": "79c045f7-cc63-4479-9207-bf3b0873c36d", "event": "anomaly", "value": "stuck_value", "signal": "ACCEL_X", "messages": 31}
+{"ts": "2026-09-01T07:45:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "9fad56ab-9f75-49f8-b823-4dc68fed3feb", "event": "anomaly", "value": "late_arrival", "delay_s": 445.4}
+{"ts": "2026-09-01T07:46:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "42072ff5-29b2-4ed2-86e1-ba6a385d24dc", "event": "anomaly", "value": "missing_signal", "signal": "ACCEL_PEDAL"}
+{"ts": "2026-09-01T07:46:20+00:00", "vin": "WVWJ3VMV2E5424921", "msg_id": "55edf8b8-c511-4c6e-ad2a-9245cc77d860", "event": "anomaly", "value": "stuck_value", "signal": "MO_Drehzahl_01", "messages": 94}
+{"ts": "2026-09-01T07:46:52+00:00", "vin": "1G166Y747LR021503", "event": "dtc_raised", "value": "P0A7E"}
+{"ts": "2026-09-01T07:46:59+00:00", "vin": "JTDWJB893SH470498", "event": "dtc_cleared", "value": "P0A7E"}
+{"ts": "2026-09-01T07:47:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "9d14bfe8-8070-4616-ab1f-55a221d9c836", "event": "anomaly", "value": "out_of_range", "signal": "LONG_ACCEL", "vss_path": "Vehicle.Acceleration.Longitudinal", "physical": 20.96}
+{"ts": "2026-09-01T07:47:20+00:00", "vin": "LGXATTY29KB735508", "msg_id": "2e9b5418-3190-40b0-9880-1a2671a47cc1", "event": "anomaly", "value": "missing_signal", "signal": "WHEELSPEED_CLEAN"}
+{"ts": "2026-09-01T07:47:20+00:00", "vin": "1G166Y747LR021503", "msg_id": "4258eab8-6952-4ace-93a1-6a54dd2aa941", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:47:20+00:00", "vin": "1G166Y747LR021503", "msg_id": "4258eab8-6952-4ace-93a1-6a54dd2aa941", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:47:20+00:00", "vin": "WVWJ3VMV2E5424921", "msg_id": "fbbdc019-b059-4975-b88a-e40edd3ee97c", "event": "anomaly", "value": "out_of_range", "signal": "MO_Oel_Temp", "vss_path": "Vehicle.Powertrain.CombustionEngine.EngineOil.Temperature", "physical": 195.0}
+{"ts": "2026-09-01T07:49:00+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "a64b42dc-99a9-4410-a68b-5c30d81c0598", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 68}
+{"ts": "2026-09-01T07:49:20+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "4306ee53-7699-41b6-8c1a-cae15648e41f", "event": "anomaly", "value": "missing_signal", "signal": "DI_vehicleSpeed"}
+{"ts": "2026-09-01T07:49:50+00:00", "vin": "WBAGRBMX5TU967558", "event": "dtc_raised", "value": "P0562"}
+{"ts": "2026-09-01T07:50:20+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "8580e24c-1aab-4b91-b8fc-f2421a54e4ea", "event": "anomaly", "value": "stuck_value", "signal": "EngineSpeed", "messages": 80}
+{"ts": "2026-09-01T07:50:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "13527164-e786-4bbb-b636-0394f115f55b", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:50:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "13527164-e786-4bbb-b636-0394f115f55b", "event": "anomaly", "value": "duplicate", "copy": 2}
+{"ts": "2026-09-01T07:49:20+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "55cbcf7a-109f-4fe0-8cc6-25f7e39cbfb7", "event": "anomaly", "value": "missing_signal", "signal": "bms_cell_temp_max"}
+{"ts": "2026-09-01T07:51:00+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "d6f8fea7-462e-41bb-8a2f-079c90cfb917", "event": "anomaly", "value": "out_of_range", "signal": "CF_Clu_Odometer", "vss_path": "Vehicle.TraveledDistance", "physical": 2634302300.0}
+{"ts": "2026-09-01T07:50:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "b1370e9d-a172-4a8f-9d20-834e412d1c03", "event": "anomaly", "value": "missing_signal", "signal": "LATERAL_ACCEL"}
+{"ts": "2026-09-01T07:50:20+00:00", "vin": "LGXATTY29KB735508", "msg_id": "3d15f0e5-84a3-4e3f-a838-4290b4819f69", "event": "anomaly", "value": "out_of_range", "signal": "STEER_ANGLE_2", "vss_path": "Vehicle.Chassis.SteeringWheel.Angle", "physical": -1117.1}
+{"ts": "2026-09-01T07:50:40+00:00", "vin": "VF15LLFC0RS450411", "msg_id": "45a6bdc2-d718-441d-abc9-231bd93ddc99", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 555}
+{"ts": "2026-09-01T07:51:00+00:00", "vin": "LGXATTY29KB735508", "msg_id": "0379b60c-b7e3-4f73-966d-759d54e41af5", "event": "anomaly", "value": "out_of_range", "signal": "STEER_ANGLE_2", "vss_path": "Vehicle.Chassis.SteeringWheel.Angle", "physical": -1345.5}
+{"ts": "2026-09-01T07:52:00+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "36f7e330-eeed-42d0-9e85-95791e3f2281", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 230}
+{"ts": "2026-09-01T07:52:20+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "9c899f25-7d64-431a-90a8-c8975135cebe", "event": "anomaly", "value": "out_of_range", "signal": "VehicleSpeed", "vss_path": "Vehicle.Speed", "physical": -210.944}
+{"ts": "2026-09-01T07:52:00+00:00", "vin": "1G166Y747LR021503", "msg_id": "6ec724d5-ce21-4cb7-acab-1cad47200540", "event": "anomaly", "value": "out_of_range", "signal": "Pack_Voltage", "vss_path": "Vehicle.Powertrain.TractionBattery.CurrentVoltage", "physical": 25.75}
+{"ts": "2026-09-01T07:53:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "12d32e31-efba-4af0-bf29-95d26ffb0866", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 306}
+{"ts": "2026-09-01T07:53:40+00:00", "vin": "LGXATTY29KB735508", "msg_id": "c7e9b117-2cd6-4b41-9e61-e034c542293c", "event": "anomaly", "value": "late_arrival", "delay_s": 269.3}
+{"ts": "2026-09-01T07:53:40+00:00", "vin": "1G166Y747LR021503", "msg_id": "fc819104-9005-4ac6-b518-3951ded9af88", "event": "anomaly", "value": "out_of_range", "signal": "Temp_A", "vss_path": "Vehicle.Powertrain.TractionBattery.Temperature.Max", "physical": 214.0}
+{"ts": "2026-09-01T07:54:00+00:00", "vin": "LGXATTY29KB735508", "msg_id": "569c088b-7afd-43ea-bc95-83ad2fe33b50", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 202}
+{"ts": "2026-09-01T07:55:20+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "115fa995-d1eb-477d-ad0e-a163d938403c", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 352}
+{"ts": "2026-09-01T07:55:40+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "9c5e377e-86b3-4443-a647-09af6d383e9e", "event": "anomaly", "value": "late_arrival", "delay_s": 318.3}
+{"ts": "2026-09-01T07:55:40+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "55850d91-2bf6-4a51-866a-3fed4a937eae", "event": "anomaly", "value": "out_of_range", "signal": "DI_torqueMotor", "vss_path": "Vehicle.Powertrain.ElectricMotor.Rear.Torque", "physical": -1437.75}
+{"ts": "2026-09-01T07:56:00+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "bca9f69d-52d5-4476-945a-1756c64cec0d", "event": "anomaly", "value": "missing_signal", "signal": "DI_vehicleSpeed"}
+{"ts": "2026-09-01T07:55:20+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "be50eace-0118-4919-8bc2-d01a29a912e9", "event": "anomaly", "value": "out_of_range", "signal": "YAW_RATE", "vss_path": "Vehicle.AngularVelocity.Yaw", "physical": 331.674}
+{"ts": "2026-09-01T07:56:00+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "f8d416cc-10d9-432e-ad7d-12dcda73e313", "event": "anomaly", "value": "late_arrival", "delay_s": 210.0}
+{"ts": "2026-09-01T07:57:40+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "34870c27-002d-4c82-8b6e-d7ca6c4a7961", "event": "anomaly", "value": "corrupt_payload", "kind": "truncated_json", "kept_chars": 211}
+{"ts": "2026-09-01T07:57:20+00:00", "vin": "LGXATTY29KB735508", "msg_id": "0074934d-08bd-46b3-bc97-07d48f64b12f", "event": "anomaly", "value": "out_of_range", "signal": "WHEELSPEED_CLEAN", "vss_path": "Vehicle.Speed", "physical": -29.1}
+{"ts": "2026-09-01T07:58:40+00:00", "vin": "5YJURH2D9DA178662", "msg_id": "42dda401-47df-4937-890d-82496d001053", "event": "anomaly", "value": "stuck_value", "signal": "DI_motorRPM", "messages": 89}
+{"ts": "2026-09-01T07:59:20+00:00", "vin": "KMH31LRG2HR589812", "msg_id": "163ef87b-d790-4a47-be03-97dcef55f788", "event": "anomaly", "value": "stuck_value", "signal": "N", "messages": 112}
+{"ts": "2026-09-01T07:59:40+00:00", "vin": "WBAGRBMX5TU967558", "msg_id": "c483d791-4ce0-4f43-8ca4-285889238112", "event": "anomaly", "value": "missing_signal", "frame_id": 464, "signals": ["TEMP_ENG"]}
+{"ts": "2026-09-01T07:58:40+00:00", "vin": "JTDWJB893SH470498", "msg_id": "0a97365e-d8b3-41f0-a252-8a1783eac57d", "event": "anomaly", "value": "out_of_range", "signal": "ACCEL_X", "vss_path": "Vehicle.Acceleration.Longitudinal", "physical": -20.395}
+{"ts": "2026-09-01T07:59:11+00:00", "vin": "1G166Y747LR021503", "event": "dtc_cleared", "value": "P0A7E"}
+{"ts": "2026-09-01T07:59:20+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "ce3ff88b-1aae-4cb5-bf40-850fbb2fa8dd", "event": "anomaly", "value": "duplicate"}
+{"ts": "2026-09-01T07:59:20+00:00", "vin": "ZARSKRY0XTS277846", "msg_id": "ce3ff88b-1aae-4cb5-bf40-850fbb2fa8dd", "event": "anomaly", "value": "duplicate", "copy": 2}

@@ -1,0 +1,11 @@
+platform_id: GM_BOLT_EV
+platform_name: Chevrolet Bolt EV (GM Global A high-voltage battery bus)
+powertrain: BEV
+encoding: json
+dbc: gm_global_a_high_voltage_management.dbc
+hardware_revs: [OnStar-G4/FW24.1]
+signals:
+  - { dbc: Pack_Stats.Pack_Voltage, vss: Vehicle.Powertrain.TractionBattery.CurrentVoltage }
+  - dbc: Battery_temp.Temp_A
+    vss: Vehicle.Powertrain.TractionBattery.Temperature.Max
+    note: Module A sensor used as the hottest-module proxy; the bus exposes 9 module sensors (A-I).

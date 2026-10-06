@@ -1,0 +1,36 @@
+# Physical plausibility bounds per VSS path, in the VSS unit of that path.
+# The Silver layer quarantines any decoded value outside [min, max] (PHYSICAL_RANGE_VIOLATION).
+# A platform mapping may override a bound for one signal; otherwise these apply fleet-wide.
+
+Vehicle.Speed:                                          { min: 0.0,     max: 260.0 }
+Vehicle.TraveledDistance:                               { min: 0.0,     max: 2.0e9 }
+Vehicle.Acceleration.Longitudinal:                      { min: -15.0,   max: 15.0 }
+Vehicle.Acceleration.Lateral:                           { min: -15.0,   max: 15.0 }
+Vehicle.AngularVelocity.Yaw:                            { min: -180.0,  max: 180.0 }
+Vehicle.Exterior.AirTemperature:                        { min: -50.0,   max: 60.0 }
+Vehicle.LowVoltageBattery.CurrentVoltage:               { min: 9.0,     max: 16.0 }
+
+Vehicle.Chassis.Accelerator.PedalPosition:              { min: 0.0,     max: 100.0 }
+Vehicle.Chassis.Brake.PedalPosition:                    { min: 0.0,     max: 100.0 }
+Vehicle.Chassis.SteeringWheel.Angle:                    { min: -780.0,  max: 780.0 }
+
+Vehicle.Powertrain.CombustionEngine.Speed:              { min: 0.0,     max: 8000.0 }
+Vehicle.Powertrain.CombustionEngine.Torque:             { min: -300.0,  max: 900.0 }
+Vehicle.Powertrain.CombustionEngine.EngineCoolant.Temperature: { min: -40.0, max: 130.0 }
+Vehicle.Powertrain.CombustionEngine.EngineOil.Temperature:     { min: -40.0, max: 160.0 }
+Vehicle.Powertrain.FuelSystem.RelativeLevel:            { min: 0.0,     max: 100.0 }
+
+Vehicle.Powertrain.ElectricMotor.Front.Speed:           { min: -20000.0, max: 20000.0 }
+Vehicle.Powertrain.ElectricMotor.Front.Torque:          { min: -800.0,  max: 800.0 }
+Vehicle.Powertrain.ElectricMotor.Rear.Speed:            { min: -20000.0, max: 20000.0 }
+Vehicle.Powertrain.ElectricMotor.Rear.Torque:           { min: -800.0,  max: 800.0 }
+
+Vehicle.Powertrain.TractionBattery.CurrentVoltage:      { min: 200.0,   max: 850.0 }
+Vehicle.Powertrain.TractionBattery.CurrentCurrent:      { min: -600.0,  max: 600.0 }
+Vehicle.Powertrain.TractionBattery.StateOfCharge.Current: { min: 0.0,   max: 100.0 }
+Vehicle.Powertrain.TractionBattery.Temperature.Max:     { min: -40.0,   max: 120.0 }
+Vehicle.Powertrain.TractionBattery.Temperature.Min:     { min: -40.0,   max: 120.0 }
+Vehicle.Powertrain.TractionBattery.CellVoltage.Max:     { min: 2.0,     max: 4.5 }
+Vehicle.Powertrain.TractionBattery.CellVoltage.Min:     { min: 2.0,     max: 4.5 }
+Vehicle.Powertrain.TractionBattery.Charging.ChargeCurrent.DC: { min: 0.0, max: 600.0 }
+Vehicle.Powertrain.TractionBattery.Charging.IsCharging: { min: 0.0,     max: 1.0 }

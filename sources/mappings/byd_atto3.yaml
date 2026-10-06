@@ -1,0 +1,11 @@
+platform_id: BYD_ATTO3
+platform_name: BYD Atto 3 (e-Platform 3.0)
+powertrain: BEV
+encoding: json
+dbc: byd_atto3.dbc
+hardware_revs: [TBOX-BYD3/FW4.2.1]
+signals:
+  - { dbc: WHEELSPEED_CLEAN.WHEELSPEED_CLEAN, vss: Vehicle.Speed }
+  - { dbc: STEER_MODULE_2.STEER_ANGLE_2,      vss: Vehicle.Chassis.SteeringWheel.Angle }
+  - { dbc: PEDAL.GAS_PEDAL,   vss: Vehicle.Chassis.Accelerator.PedalPosition, source_unit: ratio }
+  - { dbc: PEDAL.BRAKE_PEDAL, vss: Vehicle.Chassis.Brake.PedalPosition,       source_unit: ratio }

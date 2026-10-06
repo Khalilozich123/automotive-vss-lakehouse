@@ -1,0 +1,17 @@
+platform_id: HYUNDAI_KIA_CCAN_2015
+platform_name: Hyundai / Kia 2015+ C-CAN (Sonata LF, Genesis DH, Kia Optima JF)
+powertrain: ICE
+encoding: json
+dbc: hyundai_2015_ccan.dbc
+hardware_revs: [TMU-HK15/FW3.2.0, TMU-HK15/FW3.4.1]
+signals:
+  - { dbc: CLU11.CF_Clu_Vanz,      vss: Vehicle.Speed, source_unit: km/h }   # DBC says "km/h or MPH" (market dependent)
+  - { dbc: EMS11.N,                vss: Vehicle.Powertrain.CombustionEngine.Speed }
+  - { dbc: EMS12.TEMP_ENG,         vss: Vehicle.Powertrain.CombustionEngine.EngineCoolant.Temperature, source_unit: Celsius }
+  - { dbc: EMS12.PV_AV_CAN,        vss: Vehicle.Chassis.Accelerator.PedalPosition }
+  - { dbc: ESP12.LONG_ACCEL,       vss: Vehicle.Acceleration.Longitudinal }
+  - { dbc: ESP12.LAT_ACCEL,        vss: Vehicle.Acceleration.Lateral }
+  - { dbc: ESP12.YAW_RATE,         vss: Vehicle.AngularVelocity.Yaw, source_unit: degrees/s }
+  - { dbc: MDPS11.CR_Mdps_StrAng,  vss: Vehicle.Chassis.SteeringWheel.Angle }
+  - { dbc: CLU12.CF_Clu_Odometer,  vss: Vehicle.TraveledDistance }
+  - { dbc: FATC11.CR_Fatc_OutTemp, vss: Vehicle.Exterior.AirTemperature, source_unit: Celsius }

@@ -6,8 +6,12 @@ readme = "README.md"
 authors = [{ name = "Khalil Hamimid" }]
 requires-python = ">=3.11,<3.12"
 dependencies = [
+    "cantools>=44.1.0",
+    "paho-mqtt>=2.1.0",
+    "pydantic>=2.13.5",
     # Must match SPARK_VERSION in docker/Dockerfile.spark (driver and executors in lockstep).
     "pyspark==3.5.9",
+    "pyyaml>=6.0.3",
 ]
 
 [dependency-groups]
@@ -17,6 +21,7 @@ dev = [
     "ruff>=0.6",
     "black>=24",
     "mypy>=1.11",
+    "types-pyyaml>=6.0.12.20260906",
 ]
 
 [build-system]
@@ -37,7 +42,9 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "PL", "RUF"]
-ignore = ["PLR2004"]
+# PLR09xx (argument/branch/statement counts) fight code that mirrors external formats such as
+# DBC signal layouts; complexity is reviewed by hand instead.
+ignore = ["PLR2004", "PLR0912", "PLR0913", "PLR0915", "PLR0917"]
 
 [tool.mypy]
 python_version = "3.11"

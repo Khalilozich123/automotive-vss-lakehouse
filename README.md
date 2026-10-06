@@ -5,7 +5,7 @@ telemetry is landed, conformed to the [COVESA Vehicle Signal Specification](http
 and served as analytical marts, on a Medallion lakehouse (Bronze → Silver → Gold) built with
 PySpark and Apache Iceberg.
 
-> Status: **Phase 0 — Foundations & local environment** complete. See the phase plan below.
+> Status: **Phase 1 (data simulation & schema sourcing)** complete. See the phase plan below.
 
 ## Local stack
 
@@ -52,24 +52,127 @@ uv run ruff check . && uv run black --check . && uv run mypy && uv run pytest -m
 
 Stop with `docker compose down` (add `-v` to wipe all data volumes).
 
+## Data sources and platform contracts
+
+Schemas come from real production CAN databases, and all telemetry is simulated from them. No
+hardware or proprietary data is needed. See [`sources/README.md`](sources/README.md) for provenance
+and licenses.
+
+| Platform contract | Powertrain | Source DBC | Encoding | Signals |
+|---|---|---|---|---|
+| `VW_MQB` | ICE | opendbc `vw_mqb` | raw CAN frames | 9 |
+| `STELLANTIS_PSA_AEE2010` | ICE | opendbc `psa_aee2010_r3` | raw CAN frames | 8 |
+| `BMW_E9X` | ICE | opendbc `bmw_e9x_e8x` | raw CAN frames | 6 |
+| `STELLANTIS_FCA_GIORGIO` | ICE | opendbc `fca_giorgio` | JSON | 7 |
+| `HYUNDAI_KIA_CCAN_2015` | ICE | opendbc `hyundai_2015_ccan` | JSON | 10 |
+| `TOYOTA_PRIUS_GEN3` | HEV | opendbc `toyota_prius_2010_pt` | JSON | 5 |
+| `GWM_HAVAL_H6_PHEV` | PHEV | opendbc `gwm_haval_h6_phev_2024` | JSON | 1 |
+| `TESLA_MODEL_S` | BEV | opendbc `tesla_powertrain` | JSON | 4 |
+| `GM_BOLT_EV` | BEV | opendbc `gm_global_a_high_voltage_management` | JSON | 2 |
+| `BYD_ATTO3` | BEV | opendbc `byd_atto3` | JSON | 4 |
+| `RENAULT_CMF_EV` | BEV | **synthetic** (hand-written, follows the spec example) | JSON | 16 |
+
+### How a contract is made
+
+```
+sources/dbc/<platform>.dbc  ──┐
+sources/mappings/<platform>.yaml ──┼──▶ dbc_parser ──▶ contracts/<platform>.yaml
+sources/vss/vss.json (VSS 6.1) ──┤        (validated, generated, committed)
+sources/mappings/_bounds.yaml ──┘
+```
+
+* **Curated by hand:** which DBC signal corresponds to which VSS path (a few lines per platform).
+  No tool can reliably infer that `Pack_Voltage`, `BMS_packVoltage` and `HV_BATT_VOLTAGE` all
+  mean `Vehicle.Powertrain.TractionBattery.CurrentVoltage`.
+* **Automated:** bit layout, scale/offset, conversion from the DBC unit to the VSS unit
+  (mph→km/h, g→m/s², rad/s→deg/s, km→m, ratio→%) folded into the linear decode, and plausibility
+  bounds. Each `vss_path` is checked against the pinned VSS release.
+
+The validation caught a real defect in the original specification: its example contract uses
+`Vehicle.Powertrain.TractionBattery.Voltage`, which does not exist in VSS 6.1. The correct leaf is
+`TractionBattery.CurrentVoltage`.
+
+**Onboarding a new platform:** add the DBC and a mapping file, then run the parser.
+
+```bash
+uv run python -m covesa_lakehouse.data_generator.dbc_parser          # writes contracts/
+uv run python -m covesa_lakehouse.data_generator.dbc_parser --check  # CI: fails if contracts are stale
+```
+
+## Fleet simulator
+
+`generate_telemetry` simulates a multi-platform fleet. Each vehicle runs a physics-lite model
+that produces values in **VSS terms**. The model covers road load, regenerative braking, battery
+I²R heating, state-of-health effects, DC charging sessions, engine warm-up and driver
+aggressiveness. Each vehicle's contract then **encodes** those values into its platform's raw
+integers or CAN frames. In other words, the simulator runs the Silver conformance step in reverse,
+which gives Phase 3 a known ground truth to test against.
+
+```bash
+# live, real-time stream to Mosquitto (topic: vehicles/<platform_id>/<vin>/telemetry)
+uv run python -m covesa_lakehouse.data_generator.generate_telemetry --vehicles 44
+
+# one simulated day as fast as possible into a file, with ground truth (~1.9M messages, ~5 min)
+uv run python -m covesa_lakehouse.data_generator.generate_telemetry --sink jsonl \
+  --out data/landing/day1.jsonl --truth data/landing/day1.truth.jsonl \
+  --duration 86400 --speedup 0 --start 2026-09-01T00:00:00Z
+```
+
+**Data-quality anomalies** (`--anomaly-rate`, default 2% of messages) are injected for the Silver
+layer to handle without stopping the stream:
+
+| Anomaly | What happens | Expected handling |
+|---|---|---|
+| `out_of_range` | A physically impossible value (or an all-ones "not available" CAN field) | Quarantine (DLQ) |
+| `missing_signal` | A JSON key is missing, or a whole CAN frame is lost | Null / gap |
+| `stuck_value` | A sensor freezes on one value for 20–120 messages | Flatline check |
+| `corrupt_payload` | Truncated JSON or a short CAN frame | Parse error → DLQ |
+| `duplicate` | The same message is delivered twice (same `msg_id`) | Deduplicate |
+| `late_arrival` | The event time is 30–600 s behind the stream | Event-time handling |
+
+**Fault scenarios** (`--fault-rate`) drift the telemetry for 3–15 minutes and then raise a DTC.
+This gives the predictive-DTC mart (Phase 4) real precursors to find:
+
+| DTC | Precursor | Powertrains |
+|---|---|---|
+| P0A7E battery over temperature | `TractionBattery.Temperature.Max` climbs about 1.5 °C/min | BEV, PHEV, HEV |
+| P0A80 replace battery pack | spread between `CellVoltage.Max` and `CellVoltage.Min` widens | BEV, PHEV, HEV |
+| P0217 coolant over temperature | `EngineCoolant.Temperature` rises past the thermostat band | ICE, HEV, PHEV |
+| P0562 system voltage low | 12 V battery sags from ~14 V toward 11 V | ICE, HEV, PHEV |
+| P0300 misfire | `CombustionEngine.Speed` jitter grows | ICE, HEV, PHEV |
+| U0100 lost communication with ECM | powertrain signals increasingly missing | all |
+
+`--truth` writes every injected anomaly and fault lifecycle to a JSONL file.
+`tests/fixtures/telemetry_sample*.jsonl` is a small captured sample used by the tests.
+
 ## Repository layout
 
 ```
 ├─ compose.yaml                 # includes docker/docker-compose.yml so `docker compose up` works from root
-├─ docker/
-│  ├─ docker-compose.yml        # the stack
-│  ├─ Dockerfile.spark          # runtime (Spark nodes) + dev (workspace) targets
-│  ├─ rest-catalog/Dockerfile   # Iceberg REST catalog + Postgres JDBC driver
-│  └─ mosquitto/mosquitto.conf
+├─ docker/                      # stack definition, Spark image, REST catalog image, Mosquitto config
 ├─ .devcontainer/               # VS Code devcontainer → the workspace service
-├─ contracts/                   # Phase 1+: declarative YAML platform contracts
-├─ data_generator/              # Phase 1: DBC → YAML parser, telemetry publisher
+├─ sources/                     # vendored DBCs + VSS release, curated mappings, bounds, DTC catalog
+├─ contracts/                   # GENERATED platform contracts (the runtime source of truth)
 ├─ src/covesa_lakehouse/
-│  ├─ common/spark_session.py   # SparkSession factory (Iceberg REST + S3FileIO)
-│  ├─ bronze/ silver/ gold/     # Phases 2–4
+│  ├─ common/
+│  │  ├─ spark_session.py       # SparkSession factory (Iceberg REST + S3FileIO)
+│  │  ├─ contract.py            # Pydantic contract model + loader
+│  │  ├─ vss.py                 # VSS tree catalog
+│  │  ├─ can_codec.py           # DBC bit packing (Intel/Motorola), verified against cantools
+│  │  └─ reference_decoder.py   # pure-Python decoder, the oracle for the Spark engine
+│  ├─ data_generator/
+│  │  ├─ fetch_sources.py       # download pinned upstream sources
+│  │  ├─ dbc_loader.py          # tolerant DBC loading (repairs known opendbc defects)
+│  │  ├─ dbc_parser.py          # DBC + mapping → validated contract
+│  │  ├─ vehicle_model.py       # physics-lite, VSS-native vehicle simulation
+│  │  ├─ faults.py              # precursor → DTC fault scenarios
+│  │  ├─ payloads.py            # contract-driven encoding + anomaly injection
+│  │  └─ generate_telemetry.py  # multi-threaded fleet CLI (MQTT / JSONL / stdout)
+│  └─ bronze/ silver/ gold/     # Phases 2–4
 └─ tests/
    ├─ unit/                     # no external services needed (run in CI)
-   └─ integration/              # need the compose stack (marker: integration)
+   ├─ integration/              # need the compose stack (marker: integration)
+   └─ fixtures/                 # captured sample payloads + ground truth
 ```
 
 ## Delivery plan
@@ -77,8 +180,8 @@ Stop with `docker compose down` (add `-v` to wipe all data volumes).
 | Phase | Milestone | Status |
 |---|---|---|
 | 0 | Dockerized lakehouse + CI | ✅ |
-| 1 | DBC → YAML contracts, MQTT telemetry generator | ⏳ |
-| 2 | Bronze: generic append-only ingestion with lineage | |
+| 1 | DBC → YAML contracts, MQTT telemetry generator | ✅ |
+| 2 | Bronze: generic append-only ingestion with lineage | ⏳ |
 | 3 | Silver: contract-driven conformance engine + DLQ | |
 | 4 | Gold: battery SoH, predictive DTC, eco-driving marts | |
 | 5 | Orchestration, tests, quality gates | |

@@ -1,0 +1,37 @@
+VERSION "SYNTHETIC-1.0"
+
+NS_ :
+
+BS_:
+
+BU_: BMS OBC ESC INV VCU TCU
+
+BO_ 928 BMS_PACK: 8 BMS
+ SG_ bms_pack_volt_raw : 0|16@1+ (0.1,0) [0|6553.5] "V" TCU
+ SG_ bms_pack_curr_raw : 16|16@1- (0.1,0) [-3276.8|3276.7] "A" TCU
+ SG_ bms_soc_raw : 32|10@1+ (0.1,0) [0|102.3] "%" TCU
+
+BO_ 929 BMS_CELL: 8 BMS
+ SG_ bms_cell_temp_max : 0|8@1+ (1,-40) [-40|215] "degC" TCU
+ SG_ bms_cell_temp_min : 8|8@1+ (1,-40) [-40|215] "degC" TCU
+ SG_ bms_cell_volt_max : 16|13@1+ (0.001,0) [0|8.191] "V" TCU
+ SG_ bms_cell_volt_min : 29|13@1+ (0.001,0) [0|8.191] "V" TCU
+
+BO_ 944 CHARGER: 4 OBC
+ SG_ chg_dc_curr_raw : 0|13@1+ (0.1,0) [0|819.1] "A" TCU
+ SG_ chg_active : 13|1@1+ (1,0) [0|1] "" TCU
+
+BO_ 688 VEH_DYN: 8 ESC
+ SG_ veh_spd_kph : 0|16@1+ (0.0625,0) [0|4095.9375] "km/h" TCU
+ SG_ veh_long_accel : 16|10@1- (0.02,0) [-10.24|10.22] "m/s2" TCU
+ SG_ veh_odometer : 32|24@1+ (0.1,0) [0|1677721.5] "km" TCU
+
+BO_ 704 EMOT: 4 INV
+ SG_ emot_speed_rpm : 0|16@1- (1,0) [-32768|32767] "rpm" TCU
+ SG_ emot_torque_nm : 16|12@1- (0.5,0) [-1024|1023.5] "Nm" TCU
+
+BO_ 720 PEDALS: 2 VCU
+ SG_ accel_pedal_pct : 0|8@1+ (0.4,0) [0|102] "%" TCU
+ SG_ brake_pedal_pct : 8|8@1+ (0.4,0) [0|102] "%" TCU
+
+CM_ "SYNTHETIC database written for the covesa-lakehouse project. It is NOT a Renault document and does not describe real Renault CAN traffic. Signal names and scalings follow the project specification's example contract; message ids and layouts are invented.";

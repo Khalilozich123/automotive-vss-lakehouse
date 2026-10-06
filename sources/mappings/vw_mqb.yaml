@@ -1,0 +1,16 @@
+platform_id: VW_MQB
+platform_name: Volkswagen Group MQB (Golf Mk7, Audi A3 8V, Skoda Octavia III)
+powertrain: ICE
+encoding: can_frame        # this fleet ships raw CAN frames from an aftermarket logger
+dbc: vw_mqb.dbc
+hardware_revs: [J533-GW-H13/FW0718, J533-GW-H14/FW0722]
+signals:
+  - { dbc: ESP_21.ESP_v_Signal,              vss: Vehicle.Speed }
+  - { dbc: Motor_12.MO_Drehzahl_01,          vss: Vehicle.Powertrain.CombustionEngine.Speed }
+  - { dbc: Motor_07.MO_Kuehlmittel_Temp,     vss: Vehicle.Powertrain.CombustionEngine.EngineCoolant.Temperature }
+  - { dbc: Motor_07.MO_Oel_Temp,             vss: Vehicle.Powertrain.CombustionEngine.EngineOil.Temperature }
+  - { dbc: Motor_20.MO_Fahrpedalrohwert_01,  vss: Vehicle.Chassis.Accelerator.PedalPosition }
+  - { dbc: ESP_02.ESP_Laengsbeschl,          vss: Vehicle.Acceleration.Longitudinal }
+  - { dbc: ESP_02.ESP_Querbeschleunigung,    vss: Vehicle.Acceleration.Lateral }   # DBC unit is g
+  - { dbc: Diagnose_01.KBI_Kilometerstand,   vss: Vehicle.TraveledDistance }       # km -> m
+  - { dbc: Kombi_03.KBI_Tankfuellstand_Prozent, vss: Vehicle.Powertrain.FuelSystem.RelativeLevel }

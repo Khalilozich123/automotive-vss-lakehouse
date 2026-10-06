@@ -1,0 +1,15 @@
+platform_id: STELLANTIS_PSA_AEE2010
+platform_name: Stellantis / PSA AEE2010 electrical architecture (Peugeot 308 II, Citroen C4 Picasso II)
+powertrain: ICE
+encoding: can_frame
+dbc: psa_aee2010_r3.dbc
+hardware_revs: [BSI-AEE2010-R3/FW21.4, BSI-AEE2010-R3/FW22.1]
+signals:
+  - { dbc: HS2_DYN_ABR_38D.VITESSE_VEHICULE_ROUES, vss: Vehicle.Speed }
+  - { dbc: Dyn_CMM.P000_Com_nEng,           vss: Vehicle.Powertrain.CombustionEngine.Speed }
+  - { dbc: Dat_CMM.P005_CEngDst_tSens,      vss: Vehicle.Powertrain.CombustionEngine.EngineCoolant.Temperature }
+  - { dbc: HS2_DYN_ABR_38D.ACCEL_LONGI_ROUES, vss: Vehicle.Acceleration.Longitudinal }
+  - { dbc: HS2_DYN_UCF_2CD.VITESSE_LACET,   vss: Vehicle.AngularVelocity.Yaw }
+  - { dbc: STEERING.ANGLE,                  vss: Vehicle.Chassis.SteeringWheel.Angle }
+  - { dbc: DRIVER.GAS_PEDAL,                vss: Vehicle.Chassis.Accelerator.PedalPosition }
+  - { dbc: Dat6_BSI.P418_Com_uBattRaw,      vss: Vehicle.LowVoltageBattery.CurrentVoltage, source_unit: V }
