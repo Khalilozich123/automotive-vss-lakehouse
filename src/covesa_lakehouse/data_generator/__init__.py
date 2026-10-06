@@ -1,1 +1,1 @@
-﻿"""Schema sourcing (DBC -> contracts) and the fleet telemetry simulator."""
+"""Schema sourcing (DBC -> contracts) and the fleet telemetry simulator."""
