@@ -161,6 +161,8 @@ services:
       <<: *s3-env
       SPARK_MASTER_URL: spark://spark-master:7077
       SPARK_DRIVER_HOST: workspace
+      SPARK_EXECUTOR_MEMORY: ${SPARK_EXECUTOR_MEMORY:-3g}   # the worker offers 4g
+      SPARK_SHUFFLE_PARTITIONS: "32"                       # AQE coalesces small ones
       LAKEHOUSE_CATALOG_URI: http://iceberg-rest:8181
       LAKEHOUSE_WAREHOUSE: s3://warehouse/
       LAKEHOUSE_S3_ENDPOINT: http://rustfs:9000

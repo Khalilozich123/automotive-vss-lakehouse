@@ -64,6 +64,9 @@ def spark_conf(cfg: LakehouseConfig) -> dict[str, str]:
         f"{cat}.type": "rest",
         f"{cat}.uri": cfg.catalog_uri,
         f"{cat}.warehouse": cfg.warehouse,
+        # The default per-session table cache serves stale metadata to one session after another
+        # (e.g. a streaming foreachBatch session) commits. The REST catalog is the source of truth.
+        f"{cat}.cache-enabled": "false",
         f"{cat}.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
         f"{cat}.s3.endpoint": cfg.s3_endpoint,
         f"{cat}.s3.path-style-access": "true",

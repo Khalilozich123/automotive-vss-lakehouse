@@ -33,6 +33,9 @@ ANOMALY_WEIGHTS = {
 }
 
 
+_MSG_NAMESPACE = uuid.UUID("6f1c2b5e-3a4d-5e6f-8a9b-0c1d2e3f4a5b")
+
+
 def to_raw(spec: SignalSpec, value: float) -> int:
     return round((value - spec.offset) / spec.scale)
 
@@ -109,7 +112,9 @@ class PayloadEncoder:
 
     def encode(self, snapshot: dict[str, float], ts: datetime, dtcs: list[str]) -> list[Message]:
         self.seq += 1
-        msg_id = str(uuid.UUID(int=self.rng.getrandbits(128), version=4))
+        # Reproducible yet globally unique: two runs with the same seed but different start times
+        # must not share message ids (Silver deduplicates on msg_id).
+        msg_id = str(uuid.uuid5(_MSG_NAMESPACE, f"{self.vin}|{ts.isoformat()}|{self.seq}"))
         raws = self._raw_signals(snapshot)
         anomaly = None
         if self.rng.random() < self.anomaly_rate:

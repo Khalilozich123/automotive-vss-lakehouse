@@ -2,7 +2,7 @@
 
 import json
 import time
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
@@ -22,7 +22,9 @@ SAMPLE = Path("tests/fixtures/telemetry_sample.jsonl")
 
 
 @pytest.fixture
-def isolated(spark: SparkSession) -> Iterator[dict[str, str]]:
+def isolated(
+    spark: SparkSession, delete_s3_prefix: Callable[[str, str], None]
+) -> Iterator[dict[str, str]]:
     """A private landing prefix, checkpoint and table per test (table dropped afterwards)."""
     run = uuid4().hex[:10]
     names = {
@@ -33,6 +35,8 @@ def isolated(spark: SparkSession) -> Iterator[dict[str, str]]:
     }
     yield names
     spark.sql(f"DROP TABLE IF EXISTS {names['table']} PURGE")
+    delete_s3_prefix("landing", f"it-{run}/")
+    delete_s3_prefix("checkpoints", f"it-{run}")
 
 
 def _drop(prefix: str, name: str, data: bytes) -> None:

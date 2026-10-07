@@ -14,6 +14,7 @@ def test_conf_wires_iceberg_rest_catalog_with_s3fileio() -> None:
     assert conf[f"{CAT}.io-impl"] == "org.apache.iceberg.aws.s3.S3FileIO"
     assert conf[f"{CAT}.s3.endpoint"] == "http://s3:9000"
     assert conf[f"{CAT}.s3.path-style-access"] == "true"
+    assert conf[f"{CAT}.cache-enabled"] == "false"  # sessions must see each other's commits
     assert "IcebergSparkSessionExtensions" in conf["spark.sql.extensions"]
 
 

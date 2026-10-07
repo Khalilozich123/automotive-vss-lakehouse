@@ -5,7 +5,7 @@ telemetry is landed, conformed to the [COVESA Vehicle Signal Specification](http
 and served as analytical marts, on a Medallion lakehouse (Bronze → Silver → Gold) built with
 PySpark and Apache Iceberg.
 
-> Status: **Phase 2 (Bronze ingestion)** complete. See the phase plan below.
+> Status: **Phase 3 (Silver conformance engine + DLQ)** complete. See the phase plan below.
 
 ## Local stack
 
@@ -201,6 +201,83 @@ uv run python -m covesa_lakehouse.bronze.landing upload my_backfill.jsonl   # fi
 JSONL) was ingested in **68 s end to end, about 28 k rows/s**, on a single 4-core Spark worker,
 including JVM start-up.
 
+## Silver: metadata-driven conformance to COVESA VSS
+
+```
+bronze.telemetry_raw ─▶ parse envelope ─▶ message checks ─┬─ JSON: explode signals ─┐
+ (Iceberg stream,                                          └─ CAN:  explode frames  ─┴─ join contract specs ─▶ decode ─▶ range check
+  foreachBatch)                                                                         (broadcast, reloaded            │
+                                                                                         every micro-batch)             ├─▶ silver.telemetry_signals
+                                                                                                                        ├─▶ silver.telemetry_quarantine (DLQ)
+                                                                                                                        └─▶ silver.dtc_events
+```
+
+**There is no per-platform code.** At every micro-batch, `contracts/` is reloaded and flattened into
+a small *spec table*: one row per platform signal, with its scaling, bounds and pre-computed CAN
+bit window. Decoding is a single generic Spark plan that **joins** messages to that table. JSON
+signals are matched by name and CAN frames by frame id. Bit extraction (Intel and Motorola,
+signed, simple multiplexing) is a native SQL expression parameterized by the spec columns, with
+no Python UDF. Then `physical = raw × scale + offset` is applied and the result is checked against
+the plausibility bounds.
+
+**Onboarding a platform means adding one YAML file.** The integration test proves it: a *running*
+streaming query quarantines a platform as `UNKNOWN_PLATFORM`, a contract file is then dropped in,
+and the same query (never restarted) conforms that platform's next messages. A contract that
+fails validation is skipped and reported, and the rest of the fleet keeps flowing.
+
+**Dead Letter Queue** (`silver.telemetry_quarantine`): bad data is routed, never dropped, and never
+stops the stream.
+
+| Level | Error code | Cause |
+|---|---|---|
+| message | `PARSE_ERROR` | Not a complete, valid telemetry envelope (e.g. truncated) |
+| message | `UNKNOWN_PLATFORM` | No valid contract for the platform |
+| message | `ENCODING_MISMATCH` | E.g. a firmware update switched from JSON to CAN frames |
+| message | `INVALID_TIMESTAMP` | Event time missing or unparseable |
+| signal | `MALFORMED_FRAME` | CAN frame with bad hex or the wrong length |
+| signal | `INVALID_RAW_VALUE` | JSON raw value that is not an integer |
+| signal | `PHYSICAL_RANGE_VIOLATION` | Decoded value outside the plausibility bounds |
+
+Signal-level errors quarantine **only the offending reading**: one glitching sensor does not throw
+away the other readings in the same message. Message-level errors keep the raw payload for triage
+and replay.
+
+**Exactly-once and deduplication.** Each micro-batch is written with an Iceberg
+`MERGE … WHEN NOT MATCHED THEN INSERT`, keyed on `msg_id` (plus the defect key in the DLQ). This
+removes duplicate deliveries, including duplicates that arrive minutes apart, and makes a retried or
+fully replayed batch harmless. A replay of every Bronze row from a fresh checkpoint inserted
+**0 rows**.
+
+**Verified against independent oracles:**
+
+* Bit level: Spark's CAN extraction matches the Phase 1 `can_codec` (itself cross-checked
+  against `cantools`) on every signal layout in every contract.
+* Message level: Spark's decoded values match the pure-Python `reference_decoder` exactly on the
+  captured sample.
+* Anomaly level: the DLQ contains exactly the out-of-range values and corrupt payloads that the
+  simulator's ground truth says were injected.
+
+**Lessons learned while building it** (each is documented in the code):
+
+* `from_json` can return a *partial* struct for a malformed document, e.g. `msg_id` and `ts` read
+  from a truncated payload, and whether it does depends on the execution plan. Envelopes are
+  therefore first validated as complete JSON (`get_json_object(payload, '$')`).
+* Iceberg's per-session catalog cache made one Spark session miss another session's commits, such
+  as those from the streaming `foreachBatch` session. The cache is disabled; the REST catalog is
+  the source of truth.
+* Caching the micro-batch input (about 125 k raw payloads per block) ran executors out of heap on
+  a backfill. Each MERGE now streams its slice from Iceberg, and row counts come from the commit
+  summaries instead of re-counting.
+
+```bash
+uv run python -m covesa_lakehouse.silver.conformance_engine                # drain new Bronze rows, then stop
+uv run python -m covesa_lakehouse.silver.conformance_engine --continuous   # keep streaming
+```
+
+**Measured locally:** one simulated fleet-day (1.9 M Bronze rows) produced **12.4 M VSS readings,
+18 k quarantined records and 42.6 k DTC events in about 4.4 min** on a single 4-core worker, about
+48 k decoded readings/s.
+
 ## Repository layout
 
 ```
@@ -213,6 +290,7 @@ including JVM start-up.
 │  ├─ common/
 │  │  ├─ spark_session.py       # SparkSession factory (Iceberg REST + S3FileIO)
 │  │  ├─ contract.py            # Pydantic contract model + loader
+│  │  ├─ config_loader.py       # contract dir -> validated spec table (hot reload)
 │  │  ├─ vss.py                 # VSS tree catalog
 │  │  ├─ can_codec.py           # DBC bit packing (Intel/Motorola), verified against cantools
 │  │  └─ reference_decoder.py   # pure-Python decoder, the oracle for the Spark engine
@@ -229,7 +307,11 @@ including JVM start-up.
 │  │  ├─ landing.py             # landing-zone layout, S3 writer, file-drop upload CLI
 │  │  ├─ pseudonymize.py        # keyed HMAC-SHA256 VIN pseudonyms as a Spark expression
 │  │  └─ ingest_raw.py          # generic Structured Streaming ingest into Iceberg Bronze
-│  └─ silver/ gold/             # Phases 3–4
+│  ├─ silver/
+│  │  ├─ conformance_engine.py  # contract-driven decode -> Silver / DLQ / DTC tables (MERGE)
+│  │  ├─ can_decoder.py         # CAN bit extraction + scaling as native Spark expressions
+│  │  └─ data_quality.py        # error codes, validation rules, DLQ routing
+│  └─ gold/                     # Phase 4
 └─ tests/
    ├─ unit/                     # no external services needed (run in CI)
    ├─ integration/              # need the compose stack (marker: integration)
@@ -243,7 +325,7 @@ including JVM start-up.
 | 0 | Dockerized lakehouse + CI | ✅ |
 | 1 | DBC → YAML contracts, MQTT telemetry generator | ✅ |
 | 2 | Bronze: generic append-only ingestion with lineage | ✅ |
-| 3 | Silver: contract-driven conformance engine + DLQ | ⏳ |
-| 4 | Gold: battery SoH, predictive DTC, eco-driving marts | |
+| 3 | Silver: contract-driven conformance engine + DLQ | ✅ |
+| 4 | Gold: battery SoH, predictive DTC, eco-driving marts | ⏳ |
 | 5 | Orchestration, tests, quality gates | |
 | 6 | Dashboard, benchmarks, one-command demo | |

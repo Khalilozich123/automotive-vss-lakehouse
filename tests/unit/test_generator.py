@@ -127,6 +127,23 @@ def test_fault_scenarios_raise_their_dtc_after_a_precursor(
     assert set(raised) <= {"P0A7E", "P0A80", "U0100"}  # only BEV-applicable codes
 
 
+def test_message_ids_are_unique_across_runs_with_the_same_seed(
+    contracts: dict[str, Contract],
+) -> None:
+    def ids(start: datetime) -> set[str]:
+        fleet = build_fleet(contracts, 3, seed=5, anomaly_rate=0.0, fault_rate=0.0)
+        out = set()
+        for t in range(50):
+            for v in fleet:
+                snapshot, dtcs, _ = v.advance(1.0)
+                out |= {
+                    m.msg_id for m in v.encoder.encode(snapshot, start + timedelta(seconds=t), dtcs)
+                }
+        return out
+
+    assert not ids(START) & ids(START + timedelta(days=1))
+
+
 def test_publish_rate_does_not_change_the_physics(contracts: dict[str, Contract]) -> None:
     """Publishing every 20 s must sample the same 1 s physics, not take 20 s Euler steps."""
 
