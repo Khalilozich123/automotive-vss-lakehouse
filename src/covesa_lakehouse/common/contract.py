@@ -76,6 +76,20 @@ class SourceInfo(_Strict):
     synthetic: bool = False
 
 
+class VehicleSpec(_Strict):
+    """Platform reference data that analytics need (e.g. nominal capacity for SoH and EFC)."""
+
+    battery_kwh: float | None = Field(default=None, gt=0)  # traction battery, nominal
+    battery_cells_series: int | None = Field(default=None, gt=0)
+    nominal_cell_v: float = 3.7
+
+    @property
+    def nominal_capacity_ah(self) -> float | None:
+        if self.battery_kwh is None or self.battery_cells_series is None:
+            return None
+        return self.battery_kwh * 1000.0 / (self.battery_cells_series * self.nominal_cell_v)
+
+
 class Contract(_Strict):
     platform_id: str = Field(pattern=r"^[A-Z][A-Z0-9_]+$")
     platform_name: str
@@ -83,8 +97,16 @@ class Contract(_Strict):
     encoding: Encoding
     powertrain: Powertrain
     hardware_revs: list[str] = Field(min_length=1)
+    vehicle: VehicleSpec = VehicleSpec()
     source: SourceInfo
     signals: dict[str, SignalSpec] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _battery_matches_powertrain(self) -> Contract:
+        has_battery = self.vehicle.battery_kwh is not None
+        if has_battery != (self.powertrain != "ICE"):
+            raise ValueError(f"{self.powertrain} platform: battery_kwh must be set iff not ICE")
+        return self
 
     @model_validator(mode="after")
     def _unique_targets(self) -> Contract:

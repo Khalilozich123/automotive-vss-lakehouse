@@ -7,6 +7,10 @@ powertrain: BEV
 hardware_revs:
 - TCU-CMF/FW1.2.0
 - TCU-CMF/FW1.3.2
+vehicle:
+  battery_kwh: 60.0
+  battery_cells_series: 96
+  nominal_cell_v: 3.7
 source:
   dbc: synthetic/renault_cmf_ev.dbc
   vss_release: v6.1

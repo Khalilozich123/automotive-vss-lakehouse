@@ -29,7 +29,7 @@ import paho.mqtt.client as mqtt
 from paho.mqtt.enums import CallbackAPIVersion
 from paho.mqtt.reasoncodes import ReasonCode
 
-from covesa_lakehouse.bronze.landing import ObjectWriter, S3Landing, object_key
+from covesa_lakehouse.bronze.landing import ObjectWriter, S3Landing, Source, object_key
 
 TOPIC_FILTER = "vehicles/#"
 
@@ -45,7 +45,9 @@ class LandingBuffer:
         max_age_s: float = 5.0,
         clock: Callable[[], float] = time.monotonic,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
+        source: Source = "mqtt",
     ) -> None:
+        self.source: Source = source
         self.writer = writer
         self.writer_id = writer_id
         self.max_records = max_records
@@ -87,7 +89,7 @@ class LandingBuffer:
         if not self._lines:
             return []
         self.seq += 1
-        key = object_key("mqtt", self.now(), self.writer_id, self.seq)
+        key = object_key(self.source, self.now(), self.writer_id, self.seq)
         self.writer.put(key, ("\n".join(self._lines) + "\n").encode("utf-8"))
         mids = self._mids
         self.flushed_records += len(self._lines)

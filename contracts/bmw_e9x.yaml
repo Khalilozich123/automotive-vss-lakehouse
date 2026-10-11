@@ -6,6 +6,8 @@ encoding: can_frame
 powertrain: ICE
 hardware_revs:
 - JBE-E9X/FW14.3
+vehicle:
+  nominal_cell_v: 3.7
 source:
   dbc: bmw_e9x_e8x.dbc
   opendbc_commit: a7da786c8ce7b77ddbb674aef849bc86de016eff

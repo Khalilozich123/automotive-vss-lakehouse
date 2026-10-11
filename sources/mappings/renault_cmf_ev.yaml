@@ -4,6 +4,7 @@ powertrain: BEV
 encoding: json
 dbc: synthetic/renault_cmf_ev.dbc   # hand-written, NOT a real Renault database (see the file header)
 hardware_revs: [TCU-CMF/FW1.2.0, TCU-CMF/FW1.3.2]
+vehicle: { battery_kwh: 60, battery_cells_series: 96 }   # Megane E-Tech EV60, 400 V class
 signals:
   - { dbc: BMS_PACK.bms_pack_volt_raw, vss: Vehicle.Powertrain.TractionBattery.CurrentVoltage }
   - { dbc: BMS_PACK.bms_pack_curr_raw, vss: Vehicle.Powertrain.TractionBattery.CurrentCurrent }

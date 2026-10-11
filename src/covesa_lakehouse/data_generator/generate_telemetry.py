@@ -30,6 +30,8 @@ from typing import IO, Protocol
 import paho.mqtt.client as mqtt
 from paho.mqtt.enums import CallbackAPIVersion
 
+from covesa_lakehouse.bronze.landing import S3Landing
+from covesa_lakehouse.bronze.mqtt_bridge import LandingBuffer
 from covesa_lakehouse.common.contract import Contract, load_contracts
 from covesa_lakehouse.data_generator.faults import FaultManager
 from covesa_lakehouse.data_generator.payloads import Message, PayloadEncoder
@@ -78,7 +80,8 @@ def build_fleet(
         contract = contracts[platform_ids[i % len(platform_ids)]]
         rng = random.Random(f"{seed}-{i}")
         vin = make_vin(contract.platform_id, rng)
-        sim = VehicleSim(VehicleProfile.random(contract.powertrain, rng), rng)
+        profile = VehicleProfile.random(contract.powertrain, rng, contract.vehicle)
+        sim = VehicleSim(profile, rng)
         fleet.append(
             SimVehicle(
                 vin=vin,
@@ -126,6 +129,26 @@ class JsonlSink:
 
     def close(self) -> None:
         self._fh.close()
+
+
+class S3LandingSink:
+    """Writes straight into the landing zone as batch file drops (large backfills)."""
+
+    def __init__(self, writer_id: str, max_records: int = 50_000) -> None:
+        self._buffer = LandingBuffer(
+            S3Landing(), writer_id, max_records=max_records, max_age_s=1e9, source="batch"
+        )
+        self._lock = threading.Lock()
+
+    def send(self, message: Message) -> None:
+        with self._lock:
+            self._buffer.add(message.topic, message.payload.encode("utf-8"), 0)
+            if self._buffer.due():
+                self._buffer.flush()
+
+    def close(self) -> None:
+        with self._lock:
+            self._buffer.flush()
 
 
 class MqttSink:
@@ -263,7 +286,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--anomaly-rate", type=float, default=0.02, help="share of anomalous messages")
     p.add_argument("--fault-rate", type=float, default=0.3, help="fault scenarios per driving hour")
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--sink", choices=("mqtt", "jsonl", "stdout"), default="mqtt")
+    p.add_argument("--sink", choices=("mqtt", "jsonl", "s3", "stdout"), default="mqtt")
+    p.add_argument(
+        "--shard",
+        default="0/1",
+        help="K/N: simulate only vehicles K, K+N, ... (run N processes for large backfills)",
+    )
     p.add_argument("--out", type=Path, default=Path("data/landing/telemetry.jsonl"))
     p.add_argument("--truth", type=Path, default=None, help="write ground-truth events (JSONL)")
     p.add_argument("--mqtt-host", default=os.environ.get("MQTT_HOST", "localhost"))
@@ -289,11 +317,32 @@ def main(argv: list[str] | None = None) -> None:
     )
     cfg = RunConfig(hz=args.hz, duration_s=args.duration, speedup=args.speedup, start=start)
     fleet = build_fleet(contracts, args.vehicles, args.seed, args.anomaly_rate, args.fault_rate)
+    shard, n_shards = (int(x) for x in args.shard.split("/"))
+    fleet = fleet[shard::n_shards]  # the fleet is built in full, so VINs/seeds match any sharding
     n_threads = max(1, min(args.threads, len(fleet)))
 
-    shared = JsonlSink(args.out) if args.sink == "jsonl" else None
+    shared: Sink | None = None
+    if args.sink == "jsonl":
+        shared = JsonlSink(args.out)
+    elif args.sink == "s3":
+        shared = S3LandingSink(f"sim-{args.seed}-{shard}of{n_shards}")
     sinks: list[Sink] = [shared or make_sink(args, i) for i in range(n_threads)]
     truth = TruthLog(args.truth)
+    for v in fleet:  # hidden per-vehicle truth, used to validate the Gold KPIs
+        p = v.sim.p
+        truth.write(
+            {
+                "ts": start.isoformat(),
+                "vin": v.vin,
+                "event": "vehicle_profile",
+                "platform_id": v.contract.platform_id,
+                "powertrain": p.powertrain,
+                "state_of_health": round(p.state_of_health, 4),
+                "aggressiveness": round(p.aggressiveness, 4),
+                "battery_kwh": p.battery_kwh,
+                "ambient_c": round(p.ambient_c, 2),
+            }
+        )
     stats, stop = Stats(), threading.Event()
     workers = [
         threading.Thread(

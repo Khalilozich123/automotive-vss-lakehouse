@@ -33,6 +33,7 @@ from covesa_lakehouse.common.contract import (
     Powertrain,
     SignalSpec,
     SourceInfo,
+    VehicleSpec,
 )
 from covesa_lakehouse.common.vss import VssCatalog
 from covesa_lakehouse.data_generator.dbc_loader import load_dbc
@@ -62,6 +63,7 @@ class PlatformMapping(BaseModel):
     encoding: Encoding
     dbc: str
     hardware_revs: list[str]
+    vehicle: VehicleSpec = VehicleSpec()
     version: str = "1.0.0"
     signals: list[SignalMapping]
 
@@ -195,6 +197,7 @@ def build_contract(
         encoding=mapping.encoding,
         powertrain=mapping.powertrain,
         hardware_revs=mapping.hardware_revs,
+        vehicle=mapping.vehicle,
         source=SourceInfo(
             dbc=mapping.dbc,
             opendbc_commit=None if synthetic else OPENDBC_COMMIT,

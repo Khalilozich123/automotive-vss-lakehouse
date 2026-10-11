@@ -5,7 +5,7 @@ telemetry is landed, conformed to the [COVESA Vehicle Signal Specification](http
 and served as analytical marts, on a Medallion lakehouse (Bronze → Silver → Gold) built with
 PySpark and Apache Iceberg.
 
-> Status: **Phase 3 (Silver conformance engine + DLQ)** complete. See the phase plan below.
+> Status: **Phase 4 (Gold analytical marts)** complete. See the phase plan below.
 
 ## Local stack
 
@@ -120,6 +120,18 @@ uv run python -m covesa_lakehouse.data_generator.generate_telemetry --vehicles 4
 uv run python -m covesa_lakehouse.data_generator.generate_telemetry --sink jsonl \
   --out data/landing/day1.jsonl --truth data/landing/day1.truth.jsonl \
   --duration 86400 --speedup 0 --start 2026-09-01T00:00:00Z
+```
+
+Large backfills run as parallel shards writing straight into the landing zone. The fleet is
+always built in full, so VINs and seeds are identical however it is sharded. This is the Phase 4
+validation dataset (about 8 min):
+
+```bash
+for k in 0 1 2 3 4 5 6 7; do
+  uv run python -m covesa_lakehouse.data_generator.generate_telemetry --sink s3 --shard $k/8 \
+    --vehicles 44 --hz 0.2 --duration 1209600 --speedup 0 --start 2026-09-15T00:00:00Z \
+    --seed 2026 --fault-rate 0.1 --threads 1 --truth data/backfill/truth-$k.jsonl &
+done; wait
 ```
 
 **Data-quality anomalies** (`--anomaly-rate`, default 2% of messages) are injected for the Silver
@@ -278,6 +290,93 @@ uv run python -m covesa_lakehouse.silver.conformance_engine --continuous   # kee
 18 k quarantined records and 42.6 k DTC events in about 4.4 min** on a single 4-core worker, about
 48 k decoded readings/s.
 
+## Gold: automotive analytics marts
+
+```
+silver.telemetry_signals ─▶ silver.vehicle_state (pivot: one row per vehicle × timestamp)
+          │                        ├─▶ gold.battery_charging_sessions ─▶ gold.battery_health_daily   (Mart 1)
+          │                        └─▶ gold.eco_driving_trips ─────────▶ gold.eco_driving_daily      (Mart 3)
+silver.dtc_events ─────────────────┴─▶ gold.dtc_precursor_features ───▶ gold.dtc_precursor_ranking  (Mart 2)
+contracts/ ─▶ gold.dim_platform (nominal battery capacity etc.)
+```
+
+Every step replaces whole day partitions, so rebuilding a day range is idempotent:
+`uv run python -m covesa_lakehouse.gold.build [--from YYYY-MM-DD --to YYYY-MM-DD]`.
+KPIs are computed wherever their input signals exist. Because platforms share VSS names, one
+definition serves every brand.
+
+**Mart 1: EV battery health and thermal degradation**
+* **SoH by Coulomb counting.** For each charging session, `capacity = Ah delivered / ΔSoC`. The
+  ratio to the nominal capacity (from the platform contract's `vehicle` block) is the session's
+  SoH estimate. Sessions adding less than 10 SoC points are ignored as too noisy.
+* **Thermal stress.** Hours with the hottest cell above 45 °C. Time integration uses each sample's
+  hold time, and gaps over 30 s (vehicle off, lost connectivity) contribute nothing.
+* **Equivalent Full Cycles** = (Ah charged + Ah discharged) / 2 / nominal Ah.
+* **Cell-voltage delta** (max − min cell, mV), plus a risk level: `critical` when a delta above
+  100 mV coincides with heat.
+
+**Mart 2: DTC predictive triage.** For each of the 651 fault onsets, every signal of the vehicle
+is scored in the 10 minutes before the code against two references: the preceding hour, and the
+vehicle's own fault-free 14-day normal range. Four kinds of change are scored, each scaled to read
+roughly as sigmas:
+* **level**: mean versus the baseline's *extrapolated trend*, so normal drifts such as fuel or SoC
+  draining are not flagged
+* **excursion**: share of readings outside the vehicle's normal range
+* **volatility**: *increase* in spread or in sample-to-sample jitter
+* **dropout**: readings that go missing
+
+The ranking keeps, per code, the signals that move most consistently (median over onsets). The
+mart is generic over VSS paths, with one documented exception: a derived cell-voltage *spread*,
+because imbalance is invisible in either cell voltage on its own.
+
+**Mart 3: fleet eco-driving.** Trips are split out of the timeline (a stop of more than 5 min
+ends a trip). Per trip: harsh accelerations and braking (beyond ±3 m/s²), net kWh/100 km and
+regenerative-braking recovery. Per vehicle and day there are **sliding 7-day** aggregates (summed
+numerators and denominators, not averaged ratios) and an eco score from 0 to 100.
+
+### Validated against the simulator's hidden truth
+
+The simulator records what the marts can only infer: each vehicle's true SoH and driver
+aggressiveness, and which fault scenario caused each code. `uv run python -m
+covesa_lakehouse.gold.validate` compares them.
+
+Validation data: 14 simulated days × 44 vehicles, one message every 5 s. That is 10.7 M messages,
+69 M VSS readings and 651 fault onsets.
+
+| Check | Result |
+|---|---|
+| SoH estimate vs true SoH (4 vehicles, 280 sessions) | mean error **0.22 percentage points**, rank correlation **1.0** |
+| Harsh-acceleration rate vs true aggressiveness (24 vehicles, 6 platforms) | Spearman **0.77** |
+| Top-ranked precursor is the signal the fault actually perturbs | **6 / 6 DTCs** |
+
+| DTC | Top precursor found | Change type | Median strength |
+|---|---|---|---|
+| P0A80 replace battery pack | cell-voltage spread (derived) | level | 37.9 σ |
+| P0A7E battery over temperature | `TractionBattery.Temperature.Max` | level | 13.6 σ |
+| P0217 coolant over temperature | `EngineCoolant.Temperature` | excursion | 8.1 σ |
+| U0100 lost communication with ECM | powertrain signals | dropout | 4.8 σ |
+| P0562 system voltage low | `LowVoltageBattery.CurrentVoltage` | excursion | 4.2 σ |
+| P0300 misfire | `CombustionEngine.Speed` | volatility (jitter) | 2.1 σ (weak) |
+
+**What validation caught, and how it was fixed.** The first precursor ranking was wrong for 5 of 6
+codes:
+* Constant signals produced a zero standard deviation that the scoring read as a huge change.
+* Steadily draining fuel and SoC looked like level shifts.
+* Engine warm-up inside the baseline hid a 30 °C coolant excursion.
+* Calmer windows were scored as anomalies.
+
+Detrended levels, the vehicle's own normal range, one-sided volatility and a derived cell spread
+fixed all of these. Each fix has a unit test.
+
+**Honest limits of the synthetic data.** The simulated fleet drives about 680 km per vehicle per
+day (ride-hailing-like utilization, hence about 1.8 EFC/day). Regen recovery (about 7 %) is lower
+than real EVs (about 15–25 %). Misfire jitter is only weakly visible at a 5 s sampling interval.
+Only the synthetic Renault contract carries the battery current needed for SoH, EFC and
+consumption.
+
+**Build time** for 14 days on one 4-core worker: vehicle-state pivot 74 s, battery 14 s, DTC
+precursors 145 s, eco-driving 12 s (about 4.3 min in total).
+
 ## Repository layout
 
 ```
@@ -310,8 +409,14 @@ uv run python -m covesa_lakehouse.silver.conformance_engine --continuous   # kee
 │  ├─ silver/
 │  │  ├─ conformance_engine.py  # contract-driven decode -> Silver / DLQ / DTC tables (MERGE)
 │  │  ├─ can_decoder.py         # CAN bit extraction + scaling as native Spark expressions
-│  │  └─ data_quality.py        # error codes, validation rules, DLQ routing
-│  └─ gold/                     # Phase 4
+│  │  ├─ data_quality.py        # error codes, validation rules, DLQ routing
+│  │  └─ vehicle_state.py       # VSS signals pivoted per vehicle × timestamp
+│  └─ gold/
+│     ├─ build.py               # day-range build of all marts (idempotent)
+│     ├─ mart_battery_health.py # SoH (Coulomb counting), thermal stress, EFC, cell delta
+│     ├─ mart_predictive_dtc.py # DTC onsets, precursor features and ranking
+│     ├─ mart_eco_driving.py    # trips, harsh events, kWh/100 km, regen, 7-day eco score
+│     └─ validate.py            # KPIs vs the simulator's ground truth
 └─ tests/
    ├─ unit/                     # no external services needed (run in CI)
    ├─ integration/              # need the compose stack (marker: integration)
@@ -326,6 +431,6 @@ uv run python -m covesa_lakehouse.silver.conformance_engine --continuous   # kee
 | 1 | DBC → YAML contracts, MQTT telemetry generator | ✅ |
 | 2 | Bronze: generic append-only ingestion with lineage | ✅ |
 | 3 | Silver: contract-driven conformance engine + DLQ | ✅ |
-| 4 | Gold: battery SoH, predictive DTC, eco-driving marts | ⏳ |
-| 5 | Orchestration, tests, quality gates | |
+| 4 | Gold: battery SoH, predictive DTC, eco-driving marts | ✅ |
+| 5 | Orchestration, tests, quality gates | ⏳ |
 | 6 | Dashboard, benchmarks, one-command demo | |

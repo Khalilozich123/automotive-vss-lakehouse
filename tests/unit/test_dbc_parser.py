@@ -36,6 +36,7 @@ def _mapping(**signal: object) -> PlatformMapping:
             "encoding": "json",
             "dbc": "tesla_powertrain.dbc",
             "hardware_revs": ["HW1"],
+            "vehicle": {"battery_kwh": 100, "battery_cells_series": 96},
             "signals": [signal],
         }
     )

@@ -6,6 +6,10 @@ encoding: json
 powertrain: PHEV
 hardware_revs:
 - TBOX-GWM24/FW1.0.7
+vehicle:
+  battery_kwh: 35.4
+  battery_cells_series: 96
+  nominal_cell_v: 3.7
 source:
   dbc: gwm_haval_h6_phev_2024.dbc
   opendbc_commit: a7da786c8ce7b77ddbb674aef849bc86de016eff

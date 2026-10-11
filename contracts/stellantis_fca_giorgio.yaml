@@ -6,6 +6,8 @@ encoding: json
 powertrain: ICE
 hardware_revs:
 - TBM-GIORGIO/FW5.0.3
+vehicle:
+  nominal_cell_v: 3.7
 source:
   dbc: fca_giorgio.dbc
   opendbc_commit: a7da786c8ce7b77ddbb674aef849bc86de016eff

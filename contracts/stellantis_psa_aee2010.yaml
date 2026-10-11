@@ -7,6 +7,8 @@ powertrain: ICE
 hardware_revs:
 - BSI-AEE2010-R3/FW21.4
 - BSI-AEE2010-R3/FW22.1
+vehicle:
+  nominal_cell_v: 3.7
 source:
   dbc: psa_aee2010_r3.dbc
   opendbc_commit: a7da786c8ce7b77ddbb674aef849bc86de016eff

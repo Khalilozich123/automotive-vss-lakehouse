@@ -4,6 +4,7 @@ powertrain: PHEV
 encoding: json
 dbc: gwm_haval_h6_phev_2024.dbc
 hardware_revs: [TBOX-GWM24/FW1.0.7]
+vehicle: { battery_kwh: 35.4, battery_cells_series: 96 }   # H6 PHEV 2024 (Hi4)
 # Most signals in the community DBC for this platform are still unidentified ("REQ_REVIEW_*"),
 # so only the confirmed speed signal is mapped. Sparse coverage is itself realistic.
 signals:

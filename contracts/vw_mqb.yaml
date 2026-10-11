@@ -7,6 +7,8 @@ powertrain: ICE
 hardware_revs:
 - J533-GW-H13/FW0718
 - J533-GW-H14/FW0722
+vehicle:
+  nominal_cell_v: 3.7
 source:
   dbc: vw_mqb.dbc
   opendbc_commit: a7da786c8ce7b77ddbb674aef849bc86de016eff

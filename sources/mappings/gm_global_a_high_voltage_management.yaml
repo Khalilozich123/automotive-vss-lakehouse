@@ -4,6 +4,7 @@ powertrain: BEV
 encoding: json
 dbc: gm_global_a_high_voltage_management.dbc
 hardware_revs: [OnStar-G4/FW24.1]
+vehicle: { battery_kwh: 66, battery_cells_series: 96 }   # Bolt EV 2020+, 96s3p
 signals:
   - { dbc: Pack_Stats.Pack_Voltage, vss: Vehicle.Powertrain.TractionBattery.CurrentVoltage }
   - dbc: Battery_temp.Temp_A

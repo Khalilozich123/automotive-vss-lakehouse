@@ -16,7 +16,7 @@ import random
 from dataclasses import dataclass, field
 from enum import Enum
 
-from covesa_lakehouse.common.contract import Powertrain
+from covesa_lakehouse.common.contract import Powertrain, VehicleSpec
 
 G = 9.80665
 AIR_DENSITY = 1.2
@@ -51,7 +51,10 @@ class VehicleProfile:
     ambient_c: float
 
     @classmethod
-    def random(cls, powertrain: Powertrain, rng: random.Random) -> VehicleProfile:
+    def random(
+        cls, powertrain: Powertrain, rng: random.Random, vehicle: VehicleSpec | None = None
+    ) -> VehicleProfile:
+        """Random vehicle of a powertrain type; the battery comes from the contract when known."""
         base = {
             "BEV": (1750.0, 0.62, 60.0, 96),
             "PHEV": (1900.0, 0.72, 18.0, 96),
@@ -59,6 +62,8 @@ class VehicleProfile:
             "ICE": (1450.0, 0.66, 0.0, 0),
         }[powertrain]
         mass, cda, kwh, cells = base
+        if vehicle and vehicle.battery_kwh and vehicle.battery_cells_series:
+            kwh, cells = vehicle.battery_kwh, vehicle.battery_cells_series
         return cls(
             powertrain=powertrain,
             mass_kg=mass * rng.uniform(0.9, 1.15),

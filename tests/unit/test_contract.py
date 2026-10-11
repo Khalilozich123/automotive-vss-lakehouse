@@ -60,6 +60,18 @@ def test_invalid_signal_specs_are_rejected(bad: dict[str, Any]) -> None:
         Contract.model_validate(_contract(spd=_signal("Vehicle.Speed") | bad))
 
 
+def test_battery_spec_must_match_the_powertrain() -> None:
+    ice_with_battery = _contract(spd=_signal("Vehicle.Speed")) | {"vehicle": {"battery_kwh": 60}}
+    with pytest.raises(ValidationError, match="battery_kwh"):
+        Contract.model_validate(ice_with_battery)
+    bev = _contract(spd=_signal("Vehicle.Speed")) | {
+        "powertrain": "BEV",
+        "vehicle": {"battery_kwh": 60, "battery_cells_series": 96},
+    }
+    capacity = Contract.model_validate(bev).vehicle.nominal_capacity_ah
+    assert capacity == pytest.approx(60_000 / (96 * 3.7))
+
+
 def test_platform_id_must_be_upper_snake_case() -> None:
     with pytest.raises(ValidationError):
         Contract.model_validate(_contract(spd=_signal("Vehicle.Speed")) | {"platform_id": "vw"})

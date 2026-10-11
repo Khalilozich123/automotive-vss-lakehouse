@@ -6,6 +6,10 @@ encoding: json
 powertrain: BEV
 hardware_revs:
 - MCU2-TS/FW2026.20.4
+vehicle:
+  battery_kwh: 100.0
+  battery_cells_series: 96
+  nominal_cell_v: 3.7
 source:
   dbc: tesla_powertrain.dbc
   opendbc_commit: a7da786c8ce7b77ddbb674aef849bc86de016eff

@@ -7,6 +7,8 @@ powertrain: ICE
 hardware_revs:
 - TMU-HK15/FW3.2.0
 - TMU-HK15/FW3.4.1
+vehicle:
+  nominal_cell_v: 3.7
 source:
   dbc: hyundai_2015_ccan.dbc
   opendbc_commit: a7da786c8ce7b77ddbb674aef849bc86de016eff

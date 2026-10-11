@@ -4,6 +4,7 @@ powertrain: BEV
 encoding: json
 dbc: byd_atto3.dbc
 hardware_revs: [TBOX-BYD3/FW4.2.1]
+vehicle: { battery_kwh: 60.5, battery_cells_series: 126 }   # Blade LFP pack (modelled with the generic Li-ion OCV curve)
 signals:
   - { dbc: WHEELSPEED_CLEAN.WHEELSPEED_CLEAN, vss: Vehicle.Speed }
   - { dbc: STEER_MODULE_2.STEER_ANGLE_2,      vss: Vehicle.Chassis.SteeringWheel.Angle }
