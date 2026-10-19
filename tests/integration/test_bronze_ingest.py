@@ -90,8 +90,11 @@ def test_mqtt_messages_reach_bronze_through_the_bridge(
         table = spark.table(isolated["table"])
         return table.filter(table.vin.isin(pseudonyms))
 
-    # The bridge flushes partial batches every 5 s; ingest until everything has arrived.
-    args = ("s3a://landing/telemetry/", isolated["table"], isolated["checkpoint"])
+    # The bridge flushes partial batches every 5 s; ingest until everything has arrived. Only the
+    # bridge's partition for today is read: the shared landing zone may hold large backfills.
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
+    landing = f"s3a://landing/telemetry/mqtt/dt={today}/"
+    args = (landing, isolated["table"], isolated["checkpoint"])
     deadline = time.monotonic() + 60
     while True:
         ingest_raw.run(spark, *args)

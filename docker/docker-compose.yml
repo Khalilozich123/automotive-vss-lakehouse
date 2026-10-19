@@ -8,6 +8,7 @@
 #   spark-worker    Spark standalone worker                              :8081 UI
 #   mosquitto       MQTT broker (TCU -> cloud telemetry)                 :1883
 #   mqtt-bridge     MQTT -> s3://landing (Bronze landing zone)
+#   airflow         orchestration: Bronze -> Silver -> Gold + quality gates  :8088 UI
 #   workspace       dev container / Spark driver                         :4040 Spark job UI
 #   fleet-simulator live telemetry from the simulated fleet  (opt-in: --profile simulate)
 #
@@ -201,6 +202,59 @@ services:
       storage-init:
         condition: service_completed_successfully
 
+  airflow:
+    image: covesa-lakehouse/airflow:3.3.2
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.airflow
+      additional_contexts:
+        spark-runtime: "service:spark-master"   # same runtime as the executors
+    hostname: airflow   # tasks are Spark drivers; executors call back to this host
+    environment:
+      <<: *s3-env
+      AIRFLOW_DB_USER: ${CATALOG_DB_USER:-iceberg}
+      AIRFLOW_DB_PASSWORD: ${CATALOG_DB_PASSWORD:-iceberg}
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${CATALOG_DB_USER:-iceberg}:${CATALOG_DB_PASSWORD:-iceberg}@postgres:5432/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      # Paused until switched on in the UI: an automatic run must never race a manual/CI run
+      # for the same streaming checkpoints.
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/lakehouse/dags
+      AIRFLOW__CORE__SIMPLE_AUTH_MANAGER_ALL_ADMINS: "true"   # local only (127.0.0.1)
+      AIRFLOW__DAG_PROCESSOR__REFRESH_INTERVAL: "30"
+      SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_DRIVER_HOST: airflow
+      SPARK_EXECUTOR_MEMORY: ${SPARK_EXECUTOR_MEMORY:-3g}
+      SPARK_SHUFFLE_PARTITIONS: "32"
+      LAKEHOUSE_CATALOG_URI: http://iceberg-rest:8181
+      LAKEHOUSE_WAREHOUSE: s3://warehouse/
+      LAKEHOUSE_S3_ENDPOINT: http://rustfs:9000
+      CONTRACTS_DIR: /opt/lakehouse/contracts
+      PYTHONPATH: /opt/lakehouse/src   # mounted source wins over the copy baked into the image
+      VIN_PSEUDONYMIZATION_KEY: ${VIN_PSEUDONYMIZATION_KEY:-local-dev-only-key-not-for-production}
+      VIN_PSEUDONYMIZATION_KEY_ID: ${VIN_PSEUDONYMIZATION_KEY_ID:-dev-1}
+    volumes:
+      - ../dags:/opt/lakehouse/dags:ro
+      - ../contracts:/opt/lakehouse/contracts:ro   # edit/add a contract: picked up next run
+      - ../src:/opt/lakehouse/src:ro               # dev loop: code changes need no rebuild
+      - airflow-logs:/opt/airflow/home/logs
+    ports:
+      - "127.0.0.1:8088:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8080/api/v2/monitor/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      iceberg-rest:
+        condition: service_healthy
+      spark-worker:
+        condition: service_started
+
   fleet-simulator:
     <<: *app-image
     profiles: ["simulate"]
@@ -219,3 +273,4 @@ volumes:
   dev-venv:
   uv-cache:
   dev-history:
+  airflow-logs:

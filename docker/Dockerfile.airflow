@@ -1,0 +1,46 @@
+# syntax=docker/dockerfile:1.7
+#
+# Airflow for the lakehouse pipeline. Tasks are Spark *drivers*, so the image is built on the Spark
+# runtime image (same Python, Java, PySpark and extra jars as the executors).
+#
+# Two virtual environments keep dependency sets apart:
+#   /opt/airflow/venv    Airflow 3 with its official constraints
+#   /opt/lakehouse/venv  the lakehouse jobs, from the project's uv.lock
+# (In production the jobs would run as their own containers, e.g. KubernetesPodOperator.)
+#
+# Build context: the repository root; "spark-runtime" is provided by docker compose.
+
+FROM ghcr.io/astral-sh/uv:0.10 AS uv
+
+FROM spark-runtime
+
+ARG AIRFLOW_VERSION=3.3.2
+ARG PYTHON_MINOR=3.11
+
+USER root
+COPY --from=uv /uv /usr/local/bin/uv
+ENV UV_LINK_MODE=copy UV_PYTHON_PREFERENCE=only-system UV_PYTHON_DOWNLOADS=never
+
+RUN uv venv /opt/airflow/venv \
+    && VIRTUAL_ENV=/opt/airflow/venv uv pip install --no-cache \
+       "apache-airflow[postgres]==${AIRFLOW_VERSION}" \
+       --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_MINOR}.txt"
+
+WORKDIR /opt/lakehouse
+COPY pyproject.toml uv.lock README.md ./
+RUN UV_PROJECT_ENVIRONMENT=/opt/lakehouse/venv uv sync --frozen --no-dev --no-install-project
+COPY src ./src
+RUN UV_PROJECT_ENVIRONMENT=/opt/lakehouse/venv uv sync --frozen --no-dev --no-editable
+
+COPY docker/airflow/entrypoint.sh /usr/local/bin/airflow-entrypoint
+RUN chmod +x /usr/local/bin/airflow-entrypoint \
+    && mkdir -p /opt/airflow/home && chown -R spark:spark /opt/airflow /opt/lakehouse
+
+ENV PATH=/opt/airflow/venv/bin:$PATH \
+    AIRFLOW_HOME=/opt/airflow/home \
+    LAKEHOUSE_PYTHON=/opt/lakehouse/venv/bin/python \
+    LAKEHOUSE_HOME=/opt/lakehouse
+
+USER spark
+ENTRYPOINT ["/usr/bin/tini", "--", "airflow-entrypoint"]
+CMD ["standalone"]

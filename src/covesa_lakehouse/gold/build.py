@@ -13,7 +13,7 @@ import argparse
 import sys
 import time
 from collections.abc import Callable
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
@@ -58,11 +58,18 @@ def main(argv: list[str] | None = None) -> None:
     )
     p.add_argument("--from", dest="start", type=date.fromisoformat)
     p.add_argument("--to", dest="end", type=date.fromisoformat)
+    p.add_argument(
+        "--last-days", type=int, help="window: today minus N days .. today (scheduled runs)"
+    )
     args = p.parse_args(argv)
 
     spark = get_spark(LakehouseConfig.from_env(app_name="gold-build"))
-    lo, hi = silver_day_range(spark)
-    start, end = args.start or lo, args.end or hi
+    if args.last_days is not None:
+        end = datetime.now(UTC).date()
+        start = end - timedelta(days=args.last_days)
+    else:
+        lo, hi = silver_day_range(spark)
+        start, end = args.start or lo, args.end or hi
     print(f"building Gold for {start} .. {end}", file=sys.stderr)
     build(spark, start, end)
     spark.stop()

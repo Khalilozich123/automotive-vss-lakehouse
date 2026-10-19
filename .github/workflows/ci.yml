@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   lint-and-unit:
-    name: Lint, type-check, unit tests
+    name: Lint, type-check, contracts, unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,20 +27,45 @@ jobs:
       - run: uv run ruff check .
       - run: uv run black --check .
       - run: uv run mypy
-      - run: uv run pytest -m "not integration"
+      - name: Contracts are valid and match their sources
+        run: uv run python -m covesa_lakehouse.data_generator.dbc_parser --check
+      - name: Unit tests (coverage gate)
+        run: >-
+          uv run pytest -m "not integration"
+          --cov=covesa_lakehouse --cov-report=term-missing:skip-covered --cov-fail-under=70
 
   integration:
-    name: Lakehouse smoke test (docker compose)
+    name: End-to-end lakehouse (docker compose + Airflow)
     runs-on: ubuntu-latest
     needs: lint-and-unit
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Start the stack
         run: docker compose up -d --build --wait
       - name: Install dependencies in the workspace container
         run: docker compose exec -T workspace uv sync --frozen
-      - name: Iceberg write/read on object storage
+      - name: Integration tests (Iceberg, Bronze, Silver on the real stack)
         run: docker compose exec -T workspace uv run pytest -m integration -v -p no:cacheprovider
+      - name: DAGs import cleanly
+        run: docker compose exec -T airflow python /opt/lakehouse/dags/check_dags.py
+      - name: Simulate today's fleet into the landing zone
+        run: >-
+          docker compose exec -T workspace bash -lc
+          'uv run python -m covesa_lakehouse.data_generator.generate_telemetry --sink s3
+          --vehicles 11 --hz 0.2 --duration 7200 --speedup 0 --fault-rate 1
+          --start $(date -u +%Y-%m-%dT00:00:00Z)'
+      - name: Run the whole pipeline DAG (Bronze -> Silver -> Gold + quality gates)
+        run: docker compose exec -T airflow airflow dags test lakehouse_pipeline
+      - name: Gold marts are populated
+        run: >-
+          docker compose exec -T workspace uv run python -c
+          "from covesa_lakehouse.common.spark_session import get_spark;
+          s = get_spark();
+          t = ['silver.vehicle_state', 'gold.eco_driving_trips', 'gold.battery_health_daily',
+          'gold.dtc_precursor_features', 'ops.dq_results'];
+          n = {x: s.table('lakehouse.' + x).count() for x in t}; print(n);
+          assert all(n.values()), n"
       - name: Service logs on failure
         if: failure()
         run: docker compose logs --tail=200

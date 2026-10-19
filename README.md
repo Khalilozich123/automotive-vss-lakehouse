@@ -5,7 +5,7 @@ telemetry is landed, conformed to the [COVESA Vehicle Signal Specification](http
 and served as analytical marts, on a Medallion lakehouse (Bronze → Silver → Gold) built with
 PySpark and Apache Iceberg.
 
-> Status: **Phase 4 (Gold analytical marts)** complete. See the phase plan below.
+> Status: **Phase 5 (orchestration, quality gates, end-to-end CI)** complete. See the phase plan below.
 
 ## Local stack
 
@@ -19,6 +19,7 @@ Everything runs in Docker; nothing is installed on the host.
 | `spark-master` / `spark-worker` | Spark 3.5 standalone cluster | [8080](http://localhost:8080) / [8081](http://localhost:8081) |
 | `mosquitto` | MQTT broker emulating TCU → cloud delivery | 1883 |
 | `mqtt-bridge` | Lands MQTT messages in `s3://landing` (Bronze landing zone) | — |
+| `airflow` | Airflow 3 (standalone, LocalExecutor) orchestrating the pipeline | [8088](http://localhost:8088) |
 | `workspace` | Dev container and Spark driver (Python 3.11, Java 17, uv) | [4040](http://localhost:4040) (job UI) |
 | `fleet-simulator` | Live fleet telemetry, opt-in: `docker compose --profile simulate up -d` | — |
 
@@ -377,6 +378,50 @@ consumption.
 **Build time** for 14 days on one 4-core worker: vehicle-state pivot 74 s, battery 14 s, DTC
 precursors 145 s, eco-driving 12 s (about 4.3 min in total).
 
+## Orchestration and data-quality gates
+
+```
+lakehouse_pipeline (hourly)   bronze_ingest → dq_bronze → silver_conform → dq_silver → gold_build → dq_gold
+lakehouse_maintenance (daily) compact_and_expire  (Iceberg rewrite_data_files + expire_snapshots)
+```
+
+The DAGs are in Airflow 3 at [localhost:8088](http://localhost:8088). They are paused at creation,
+so switch `lakehouse_pipeline` on to run it hourly, or trigger it with `{"days_back": 14}` to
+rebuild two weeks.
+
+Tasks are Spark *drivers*, so the Airflow image is built on the Spark runtime image (same Python,
+Java and PySpark as the executors). Airflow and the lakehouse jobs run in separate virtualenvs,
+because their dependency pins conflict. In production the jobs would run as their own containers,
+for example with KubernetesPodOperator. Every task is idempotent, so retries are safe.
+
+**Quality gates** (`covesa_lakehouse.quality.checks`) run between the layers. A failed
+*error*-level check fails its task and stops the run before bad data spreads. *warn*-level checks
+are recorded. Every result is appended to `lakehouse.ops.dq_results` for trending.
+
+| Layer | Check | Severity |
+|---|---|---|
+| Bronze | no raw 17-character VIN in any payload (privacy gate) | error |
+| Bronze | ≤ 1 % of rows unattributable to a platform; no duplicate ingestion ids | error |
+| Silver | no duplicate (msg_id, vss_path); quarantine rate ≤ 5 % | error |
+| Silver | parse-error rate ≤ 2 %; messages from platforms without a contract | warn |
+| Silver | **stuck sensors**: runs of one value while moving, beyond 2× the signal's p99 run (→ `ops.dq_stuck_runs`) | warn |
+| Silver | **schema drift**: JSON signals / CAN frames sent but not in the contract (→ `ops.dq_unmapped_signals`) | warn |
+| Gold | vehicle state built whenever Silver has data; eco score in [0, 100]; SoH in [50, 110] %; KPIs non-negative; every Gold vehicle exists in Silver | error |
+
+The stuck-sensor detector was measured against the simulator's ground truth on two days (4.5 k
+injected events). It reached **precision 0.77** and recall 0.32. Most misses cannot be detected in
+principle: a sensor frozen at 0 looks like a parked car, and a platform without a speed signal
+cannot tell moving from parked. That is why the check is a warning and not a gate. A first
+version that compared runs with the *median* run length reached only 0.29 precision, because
+plateauing signals such as coolant at thermostat temperature produced false alarms.
+
+**CI** (GitHub Actions) on every push and pull request:
+1. ruff, black, strict mypy, contract regeneration check, and unit tests with a **70 % coverage
+   gate**. Unit coverage is 71 %; the I/O wiring is covered by step 2.
+2. The whole stack in Docker Compose: integration tests, then a DAG import check. A simulated
+   fleet then writes today's data, **the complete `lakehouse_pipeline` DAG runs** with all its
+   quality gates, and the job asserts that every Gold mart is populated.
+
 ## Repository layout
 
 ```
@@ -417,6 +462,11 @@ precursors 145 s, eco-driving 12 s (about 4.3 min in total).
 │     ├─ mart_predictive_dtc.py # DTC onsets, precursor features and ranking
 │     ├─ mart_eco_driving.py    # trips, harsh events, kWh/100 km, regen, 7-day eco score
 │     └─ validate.py            # KPIs vs the simulator's ground truth
+│  ├─ quality/
+│  │  ├─ checks.py              # declarative quality gates per layer -> ops.dq_results
+│  │  └─ rules.py               # stuck-sensor and schema-drift detectors
+│  └─ ops/maintenance.py        # Iceberg compaction + snapshot expiry
+├─ dags/                        # Airflow 3 DAGs (pipeline, maintenance) + CI import check
 └─ tests/
    ├─ unit/                     # no external services needed (run in CI)
    ├─ integration/              # need the compose stack (marker: integration)
@@ -432,5 +482,5 @@ precursors 145 s, eco-driving 12 s (about 4.3 min in total).
 | 2 | Bronze: generic append-only ingestion with lineage | ✅ |
 | 3 | Silver: contract-driven conformance engine + DLQ | ✅ |
 | 4 | Gold: battery SoH, predictive DTC, eco-driving marts | ✅ |
-| 5 | Orchestration, tests, quality gates | ⏳ |
-| 6 | Dashboard, benchmarks, one-command demo | |
+| 5 | Orchestration, tests, quality gates | ✅ |
+| 6 | Dashboard, benchmarks, one-command demo | ⏳ |
