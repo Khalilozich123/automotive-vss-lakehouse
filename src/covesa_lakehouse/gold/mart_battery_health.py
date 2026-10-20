@@ -2,8 +2,10 @@
 
 ``gold.battery_charging_sessions`` (one row per charging session)
     Energy and charge delivered, SoC window, and a **capacity estimate by Coulomb counting**:
-    ``capacity_Ah = Ah delivered / delta SoC``. Its ratio to the nominal capacity (from the
-    platform contract) is the session's SoH estimate. Only sessions that add at least
+    the inverse slope of SoC against cumulative Ah over all of the session's samples (an endpoint
+    ratio, Ah / delta SoC, is broken by one skewed reading). Its ratio to the nominal capacity
+    (from the platform contract) is the session's SoH estimate. Sessions with a frozen current
+    sensor get none. Only sessions that add at least
     ``MIN_SOC_GAIN`` percentage points are used, because short top-ups give noisy ratios.
 
 ``gold.battery_health_daily`` (one row per vehicle per day)
@@ -40,6 +42,8 @@ THERMAL_STRESS_C = 45.0
 CELL_DELTA_WATCH_MV = 100.0
 MIN_SOC_GAIN = 10.0
 CHARGE_PAUSE_S = 120.0
+SOC_SPIKE_PTS = 1.0
+FROZEN_CURRENT_SAMPLES = 12  # one exact current value for a minute at 5 s sampling
 
 SESSIONS_DDL = """
 CREATE TABLE IF NOT EXISTS {table} (
@@ -47,7 +51,7 @@ CREATE TABLE IF NOT EXISTS {table} (
     session_start TIMESTAMP, session_end TIMESTAMP, duration_min DOUBLE,
     soc_start_pct DOUBLE, soc_end_pct DOUBLE, energy_in_kwh DOUBLE, charge_in_ah DOUBLE,
     max_dc_current_a DOUBLE, max_temp_c DOUBLE,
-    capacity_est_ah DOUBLE COMMENT 'Ah delivered / delta SoC (Coulomb counting)',
+    capacity_est_ah DOUBLE COMMENT '100 / slope of SoC vs cumulative Ah (Coulomb counting)',
     soh_est_pct DOUBLE COMMENT 'capacity_est_ah / nominal capacity x 100; null if SoC gain < 10 pts'
 ) USING iceberg PARTITIONED BY (days(session_start))
 TBLPROPERTIES ('format-version'='2')
@@ -78,17 +82,46 @@ def charging_sessions(state: DataFrame, dim: DataFrame) -> DataFrame:
     )
     charging = with_sample_dt(charging)
     current_in = F.greatest(F.col("pack_current_a"), F.lit(0.0))
+    ah = current_in * F.col("dt_s") / 3600.0
+    # Charge delivered before each sample (each sample's own Ah covers the interval after it).
+    order = Window.partitionBy("session_id").orderBy("event_ts")
+    before = order.rowsBetween(Window.unboundedPreceding, -1)
+    charging = charging.withColumn("cum_ah", F.coalesce(F.sum(ah).over(before), F.lit(0.0)))
+    # SoC cannot jump and come straight back while charging: a reading that disagrees with
+    # both neighbours (a late, clock-skewed message) is left out of the fit and the endpoints.
+    soc = F.col("soc_pct")
+    spike = F.coalesce(F.abs(soc - F.lag(soc).over(order)) > SOC_SPIKE_PTS, F.lit(True)) & (
+        F.coalesce(F.abs(soc - F.lead(soc).over(order)) > SOC_SPIKE_PTS, F.lit(True))
+    )
+    charging = charging.withColumn("_soc", F.when(~spike, soc))
+    clean_ts = F.when(F.col("_soc").isNotNull(), F.col("event_ts"))
+    # A frozen current sensor keeps reporting one exact value while the real current tapers;
+    # its Ah total is fiction, so such a session gets no capacity estimate.
+    amps = F.col("pack_current_a")
+    new_run = F.coalesce(amps != F.lag(amps).over(order), F.lit(True)).cast("int")
+    charging = charging.withColumn("_run", F.sum(new_run).over(order)).withColumn(
+        "_run_len", F.count(F.lit(1)).over(Window.partitionBy("session_id", "_run"))
+    )
     sessions = charging.groupBy("session_id", "vin", "platform_id", "session_start").agg(
         F.max("event_ts").alias("session_end"),
-        F.min_by("soc_pct", "event_ts").alias("soc_start_pct"),
-        F.max_by("soc_pct", "event_ts").alias("soc_end_pct"),
+        F.min_by("_soc", clean_ts).alias("soc_start_pct"),
+        F.max_by("_soc", clean_ts).alias("soc_end_pct"),
         F.sum(current_in * F.col("pack_voltage_v") * F.col("dt_s") / 3.6e6).alias("energy_in_kwh"),
-        F.sum(current_in * F.col("dt_s") / 3600.0).alias("charge_in_ah"),
+        F.sum(ah).alias("charge_in_ah"),
+        # SoC points per Ah over *every* sample of the session: an endpoint ratio
+        # (Ah / delta SoC) is wrecked by one skewed reading at either end.
+        F.regr_slope("_soc", "cum_ah").alias("_soc_per_ah"),
+        F.max("_run_len").alias("_frozen_samples"),
         F.max("dc_charge_current_a").alias("max_dc_current_a"),
         F.max("batt_temp_max_c").alias("max_temp_c"),
     )
     soc_gain = F.col("soc_end_pct") - F.col("soc_start_pct")
-    capacity = F.when(soc_gain >= MIN_SOC_GAIN, F.col("charge_in_ah") / (soc_gain / 100.0))
+    capacity = F.when(
+        (soc_gain >= MIN_SOC_GAIN)
+        & (F.col("_soc_per_ah") > 0)
+        & (F.col("_frozen_samples") < FROZEN_CURRENT_SAMPLES),
+        100.0 / F.col("_soc_per_ah"),
+    )
     return (
         sessions.join(F.broadcast(dim.select("platform_id", "nominal_capacity_ah")), "platform_id")
         .withColumn(
@@ -97,7 +130,7 @@ def charging_sessions(state: DataFrame, dim: DataFrame) -> DataFrame:
         )
         .withColumn("capacity_est_ah", capacity)
         .withColumn("soh_est_pct", capacity / F.col("nominal_capacity_ah") * 100.0)
-        .drop("nominal_capacity_ah")
+        .drop("nominal_capacity_ah", "_soc_per_ah", "_frozen_samples")
     )
 
 

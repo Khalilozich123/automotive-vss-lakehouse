@@ -1,0 +1,29 @@
+# Dashboard theme: technical drawing sheet. Drafting paper ground, ink, dimension blue for data and
+# tolerances, revision red for action. Mirrors the tokens in src/covesa_lakehouse/dashboard/ui.py.
+
+[server]
+enableStaticServing = true   # serves dashboard/static (the self-hosted Archivo font)
+runOnSave = true
+
+[client]
+toolbarMode = "minimal"
+
+[theme]
+base = "light"
+primaryColor = "#2f5d8a"
+backgroundColor = "#f3f2ec"
+secondaryBackgroundColor = "#e9e7de"
+textColor = "#1d1d1b"
+linkColor = "#2f5d8a"
+borderColor = "#c9c6ba"
+baseRadius = "none"
+showWidgetBorder = true
+baseFontSize = 15
+font = "Archivo"
+headingFont = "Archivo"
+chartCategoricalColors = ["#2f5d8a", "#1d1d1b", "#c8102e", "#9a5b00", "#6f7d8c", "#8a6f9b"]
+
+[[theme.fontFaces]]
+family = "Archivo"
+url = "app/static/fonts/archivo-variable-latin.woff2"
+weight = "100 900"

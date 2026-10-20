@@ -422,6 +422,11 @@ def start(
         spark.readStream.format("iceberg")
         # Bounded micro-batches: a large backfill is worked off in steps, not in one huge batch.
         .option("streaming-max-rows-per-micro-batch", max_rows_per_batch)
+        # Bronze is append-only for this stream. A delete there (retention, GDPR erasure, removing
+        # a bad load) is a deliberate purge with nothing new for Silver; without these options the
+        # first one would halt the stream for good.
+        .option("streaming-skip-delete-snapshots", "true")
+        .option("streaming-skip-overwrite-snapshots", "true")
         .load(bronze_table)
         .writeStream.foreachBatch(lambda df, _id: process_batch(df, contracts_dir, tables, stats))
         .option("checkpointLocation", checkpoint)

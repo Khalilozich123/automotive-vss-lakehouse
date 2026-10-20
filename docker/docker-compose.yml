@@ -255,6 +255,35 @@ services:
       spark-worker:
         condition: service_started
 
+  dashboard:
+    <<: *app-image
+    working_dir: /app   # Streamlit reads ./.streamlit/config.toml from here
+    command: ["streamlit", "run", "/app/src/covesa_lakehouse/dashboard/app.py",
+              "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true",
+              "--browser.gatherUsageStats=false"]
+    environment:
+      <<: *s3-env
+      LAKEHOUSE_CATALOG_URI: http://iceberg-rest:8181
+      LAKEHOUSE_S3_ENDPOINT: http://rustfs:9000
+      CONTRACTS_DIR: /app/contracts
+      DTC_CATALOG: /app/sources/dtc/dtc_catalog.yaml
+      PYTHONPATH: /app/src   # mounted source wins over the installed copy (live reload)
+    volumes:
+      - ../src:/app/src:ro
+      - ../contracts:/app/contracts:ro
+      - ../sources/dtc:/app/sources/dtc:ro
+      - ../.streamlit:/app/.streamlit:ro
+    ports:
+      - "127.0.0.1:8501:8501"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    depends_on:
+      iceberg-rest:
+        condition: service_healthy
+
   fleet-simulator:
     <<: *app-image
     profiles: ["simulate"]

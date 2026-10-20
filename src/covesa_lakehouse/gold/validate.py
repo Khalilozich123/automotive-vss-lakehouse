@@ -18,6 +18,7 @@ import glob
 import json
 import math
 import sys
+from datetime import UTC, datetime
 from typing import Any
 
 from pyspark.sql import SparkSession
@@ -148,11 +149,73 @@ def validate(spark: SparkSession, truth_glob: str) -> dict[str, Any]:
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--truth", default="data/backfill/truth-*.jsonl")
+    p.add_argument("--no-write", action="store_true", help=f"do not record to {RESULTS_TABLE}")
     args = p.parse_args(argv)
     spark = get_spark(LakehouseConfig.from_env(app_name="gold-validate"))
     spark.sparkContext.setLogLevel("ERROR")
-    print(json.dumps(validate(spark, args.truth), indent=2), file=sys.stdout)
+    report = validate(spark, args.truth)
+    if not args.no_write:
+        write_results(spark, report)
+    print(json.dumps(report, indent=2), file=sys.stdout)
     spark.stop()
+
+
+RESULTS_TABLE = "lakehouse.ops.validation_results"
+
+
+def result_rows(report: dict[str, Any]) -> list[tuple[str, str, float, str, bool, int]]:
+    """Flatten the report into (check, label, value, unit, passed, sample_size) rows."""
+    rows = []
+    if "soh" in report:
+        soh = report["soh"]
+        rows.append(
+            (
+                "soh_error",
+                "Battery SoH estimate vs true SoH",
+                soh["mean_abs_error_pct_points"],
+                "pts",
+                soh["mean_abs_error_pct_points"] <= 2.0,
+                soh["sessions"],
+            )
+        )
+    if "eco" in report:
+        rho = report["eco"]["spearman_harsh_rate_vs_aggressiveness"]
+        rows.append(
+            (
+                "eco_rank",
+                "Harsh-driving rate vs true aggressiveness",
+                rho,
+                "rho",
+                rho >= 0.6,
+                report["eco"]["vehicles"],
+            )
+        )
+    precursors = report.get("precursors", {})
+    if precursors:
+        found = sum(1 for p in precursors.values() if p.get("correct"))
+        rows.append(
+            (
+                "dtc_precursors",
+                "Correct top precursor per fault code",
+                float(found),
+                f"of {len(precursors)}",
+                found == len(precursors),
+                len(precursors),
+            )
+        )
+    return rows  # fmt: skip
+
+
+def write_results(spark: SparkSession, report: dict[str, Any]) -> None:
+    """Persist the verdicts so downstream consumers (the dashboard) never need the truth files."""
+    spark.sql("CREATE NAMESPACE IF NOT EXISTS lakehouse.ops")
+    schema = (
+        "check STRING, label STRING, value DOUBLE, unit STRING, passed BOOLEAN,"
+        " sample_size BIGINT, validated_at TIMESTAMP"
+    )
+    now = datetime.now(UTC).replace(tzinfo=None)
+    rows = [(*r, now) for r in result_rows(report)]
+    spark.createDataFrame(rows, schema).writeTo(RESULTS_TABLE).createOrReplace()
 
 
 if __name__ == "__main__":

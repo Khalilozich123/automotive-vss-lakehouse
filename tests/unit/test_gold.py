@@ -54,26 +54,48 @@ def test_sessionize_splits_on_long_pauses(spark: SparkSession) -> None:
 
 
 # ---------------------------------------------------------------------- battery
+def _charge(true_capacity_ah: float, seconds: int = 1800) -> list[dict[str, Any]]:
+    """A 100 A charge (with the ±0.1 A jitter of a real sensor) and its exactly implied SoC."""
+    rows, charged_ah = [], 0.0
+    for i, s in enumerate(range(0, seconds + 1, 5)):
+        amps = 100.0 + (0.1 if i % 2 else -0.1)
+        rows.append({
+            "ts": T0 + timedelta(seconds=s), "is_charging": 1.0, "pack_current_a": amps,
+            "pack_voltage_v": 380.0, "soc_pct": 30.0 + charged_ah / true_capacity_ah * 100,
+            "dc_charge_current_a": amps, "batt_temp_max_c": 30.0,
+        })  # fmt: skip
+        charged_ah += amps * 5 / 3600
+    return rows
+
+
 def test_coulomb_counting_recovers_true_capacity(spark: SparkSession) -> None:
-    true_capacity_ah, amps, seconds = 150.0, 100.0, 1800
-    rows = [
-        {
-            "ts": T0 + timedelta(seconds=s),
-            "is_charging": 1.0,
-            "pack_current_a": amps,
-            "pack_voltage_v": 380.0,
-            "soc_pct": 30.0 + amps * s / 3600 / true_capacity_ah * 100,
-            "dc_charge_current_a": amps,
-            "batt_temp_max_c": 30.0,
-        }
-        for s in range(0, seconds + 1, 5)
-    ]
+    rows = _charge(true_capacity_ah=150.0)
     (session,) = battery.charging_sessions(_state(spark, rows), _dim(spark)).collect()
     assert session.charge_in_ah == pytest.approx(50.0)
-    assert session.capacity_est_ah == pytest.approx(true_capacity_ah)
-    assert session.soh_est_pct == pytest.approx(true_capacity_ah / NOMINAL_AH * 100)
+    assert session.capacity_est_ah == pytest.approx(150.0)
+    assert session.soh_est_pct == pytest.approx(150.0 / NOMINAL_AH * 100)
     assert session.energy_in_kwh == pytest.approx(50.0 * 380 / 1000)
     assert session.duration_min == pytest.approx(30.0)
+
+
+def test_clock_skewed_readings_do_not_move_capacity(spark: SparkSession) -> None:
+    rows = _charge(true_capacity_ah=150.0)
+    true_end = rows[-2]["soc_pct"]
+    rows[40]["soc_pct"] += 6.0  # late, clock-skewed messages: one mid-session ...
+    rows[-1]["soc_pct"] = 95.0  # ... and one landing as the session's last sample
+    (session,) = battery.charging_sessions(_state(spark, rows), _dim(spark)).collect()
+    # An endpoint ratio would say 50 Ah / 65 pts = 77 Ah; the slope over all samples holds.
+    assert session.soc_end_pct == pytest.approx(true_end)
+    assert session.capacity_est_ah == pytest.approx(150.0, rel=0.001)
+
+
+def test_frozen_current_sensor_gives_no_soh_estimate(spark: SparkSession) -> None:
+    rows = _charge(true_capacity_ah=150.0)
+    for r in rows[100:130]:  # the sensor repeats one value for 2.5 minutes
+        r["pack_current_a"] = 116.3
+    (session,) = battery.charging_sessions(_state(spark, rows), _dim(spark)).collect()
+    assert session.charge_in_ah > 50.0  # still reported, as measured
+    assert session.soh_est_pct is None
 
 
 def test_short_top_ups_give_no_soh_estimate(spark: SparkSession) -> None:

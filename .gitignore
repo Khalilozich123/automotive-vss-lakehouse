@@ -19,6 +19,8 @@ derby.log
 # Local data (raw DBC clones, sample captures, datasets) — never commit bulk data
 data/
 *.parquet
+# ...except the small, synthetic, pseudonymized dashboard test snapshot
+!tests/fixtures/dashboard/*.parquet
 *.blf
 *.asc
 
@@ -32,3 +34,4 @@ Thumbs.db
 
 # Office lock files
 ~$*
+

@@ -5,7 +5,10 @@ telemetry is landed, conformed to the [COVESA Vehicle Signal Specification](http
 and served as analytical marts, on a Medallion lakehouse (Bronze → Silver → Gold) built with
 PySpark and Apache Iceberg.
 
-> Status: **Phase 5 (orchestration, quality gates, end-to-end CI)** complete. See the phase plan below.
+> Status: **all six phases complete**: ingestion, conformance, analytics marts, orchestration with
+> quality gates, and a fleet dashboard. Every KPI is validated against the simulator's ground truth.
+
+![Fleet status: vehicles out of tolerance next to the validation verdicts](docs/img/dashboard-overview.png)
 
 ## Local stack
 
@@ -20,6 +23,7 @@ Everything runs in Docker; nothing is installed on the host.
 | `mosquitto` | MQTT broker emulating TCU → cloud delivery | 1883 |
 | `mqtt-bridge` | Lands MQTT messages in `s3://landing` (Bronze landing zone) | — |
 | `airflow` | Airflow 3 (standalone, LocalExecutor) orchestrating the pipeline | [8088](http://localhost:8088) |
+| `dashboard` | Streamlit fleet dashboard, reading Gold through PyIceberg (no Spark) | [8501](http://localhost:8501) |
 | `workspace` | Dev container and Spark driver (Python 3.11, Java 17, uv) | [4040](http://localhost:4040) (job UI) |
 | `fleet-simulator` | Live fleet telemetry, opt-in: `docker compose --profile simulate up -d` | — |
 
@@ -37,6 +41,16 @@ the executors are built from the same `docker/Dockerfile.spark`, so their versio
 > RustFS-specific (Iceberg talks plain S3 through `S3FileIO`).
 
 ## Getting started
+
+**One command.** From the repo root (bash; Git Bash on Windows), with only Docker installed:
+
+```bash
+scripts/demo.sh            # 3 simulated days x 44 vehicles, about 10 min; DAYS=14 for the full dataset
+```
+
+It starts the stack, simulates the fleet into the landing zone, runs the real `lakehouse_pipeline`
+DAG (Bronze → Silver → Gold, stopped by any failing quality gate), validates the Gold KPIs against
+the simulator's hidden truth, and leaves the dashboard at [localhost:8501](http://localhost:8501).
 
 **Option A — VS Code (recommended).** Open the folder and choose **Reopen in Container**. The whole
 stack starts and dependencies are installed into a named volume.
@@ -278,6 +292,10 @@ fully replayed batch harmless. A replay of every Bronze row from a fresh checkpo
 * Iceberg's per-session catalog cache made one Spark session miss another session's commits, such
   as those from the streaming `foreachBatch` session. The cache is disabled; the REST catalog is
   the source of truth.
+* An Iceberg stream refuses to read past a *delete* snapshot by default, so the first retention
+  purge or erasure request in Bronze would have halted Silver for good. Bronze is append-only for
+  the stream, so delete and overwrite snapshots are skipped, and an integration test purges rows
+  mid-stream.
 * Caching the micro-batch input (about 125 k raw payloads per block) ran executors out of heap on
   a backfill. Each MERGE now streams its slice from Iceberg, and row counts come from the commit
   summaries instead of re-counting.
@@ -307,9 +325,12 @@ KPIs are computed wherever their input signals exist. Because platforms share VS
 definition serves every brand.
 
 **Mart 1: EV battery health and thermal degradation**
-* **SoH by Coulomb counting.** For each charging session, `capacity = Ah delivered / ΔSoC`. The
-  ratio to the nominal capacity (from the platform contract's `vehicle` block) is the session's
-  SoH estimate. Sessions adding less than 10 SoC points are ignored as too noisy.
+* **SoH by Coulomb counting.** For each charging session, capacity is the inverse slope of SoC
+  against cumulative Ah over *all* of the session's samples. The ratio to the nominal capacity (from
+  the platform contract's `vehicle` block) is the session's SoH estimate. Sessions adding less than
+  10 SoC points are ignored as too noisy. SoC readings that jump and fall straight back (late,
+  clock-skewed messages) are left out of the fit, and a session whose current sensor froze gets no
+  estimate at all, because its Ah total is fiction.
 * **Thermal stress.** Hours with the hottest cell above 45 °C. Time integration uses each sample's
   hold time, and gaps over 30 s (vehicle off, lost connectivity) contribute nothing.
 * **Equivalent Full Cycles** = (Ah charged + Ah discharged) / 2 / nominal Ah.
@@ -346,7 +367,7 @@ Validation data: 14 simulated days × 44 vehicles, one message every 5 s. That i
 
 | Check | Result |
 |---|---|
-| SoH estimate vs true SoH (4 vehicles, 280 sessions) | mean error **0.22 percentage points**, rank correlation **1.0** |
+| SoH estimate vs true SoH (4 vehicles, 263 sessions) | mean error **0.29 percentage points**, rank correlation **1.0** |
 | Harsh-acceleration rate vs true aggressiveness (24 vehicles, 6 platforms) | Spearman **0.77** |
 | Top-ranked precursor is the signal the fault actually perturbs | **6 / 6 DTCs** |
 
@@ -368,6 +389,13 @@ codes:
 
 Detrended levels, the vehicle's own normal range, one-sided volatility and a derived cell spread
 fixed all of these. Each fix has a unit test.
+
+The SoH plausibility gate caught a second problem. The first estimator divided the charge by the
+SoC gained between a session's first and last readings, so one late, clock-skewed message at
+either end wrecked it: 13 sessions came out outside 50–110 %. Fitting the slope over every sample
+and dropping SoC spikes brought that down to one session. That last one turned out to have a
+frozen current sensor reporting 116.3 A for nine minutes while the real current tapered, and such
+sessions are now excluded. The gate passes, and the mean error stays within a tenth of a point.
 
 **Honest limits of the synthetic data.** The simulated fleet drives about 680 km per vehicle per
 day (ride-hailing-like utilization, hence about 1.8 EFC/day). Regen recovery (about 7 %) is lower
@@ -408,6 +436,11 @@ are recorded. Every result is appended to `lakehouse.ops.dq_results` for trendin
 | Silver | **schema drift**: JSON signals / CAN frames sent but not in the contract (→ `ops.dq_unmapped_signals`) | warn |
 | Gold | vehicle state built whenever Silver has data; eco score in [0, 100]; SoH in [50, 110] %; KPIs non-negative; every Gold vehicle exists in Silver | error |
 
+Each ratio keeps its numerator and denominator on one time basis. Signal readings are counted by
+event time, as Silver is partitioned. Whole messages (parse errors, unknown platforms) are counted
+by Bronze ingestion time, joined back to Bronze on `ingestion_id`, since an unparseable message has
+no event time. An earlier version mixed the two and silently reported 0 % on any backfill.
+
 The stuck-sensor detector was measured against the simulator's ground truth on two days (4.5 k
 injected events). It reached **precision 0.77** and recall 0.32. Most misses cannot be detected in
 principle: a sensor frozen at 0 looks like a parked car, and a platform without a speed signal
@@ -417,10 +450,63 @@ plateauing signals such as coolant at thermostat temperature produced false alar
 
 **CI** (GitHub Actions) on every push and pull request:
 1. ruff, black, strict mypy, contract regeneration check, and unit tests with a **70 % coverage
-   gate**. Unit coverage is 71 %; the I/O wiring is covered by step 2.
+   gate** (currently 74 %). They include headless renders of every dashboard page, both on an
+   empty stack and on a small real snapshot. The I/O wiring is covered by step 2.
 2. The whole stack in Docker Compose: integration tests, then a DAG import check. A simulated
    fleet then writes today's data, **the complete `lakehouse_pipeline` DAG runs** with all its
    quality gates, and the job asserts that every Gold mart is populated.
+
+## Dashboard
+
+```
+gold.* / ops.* (Iceberg) ──PyIceberg──▶ pandas ──▶ Streamlit   (no Spark cluster needed to read)
+```
+
+[localhost:8501](http://localhost:8501) serves five views over the Gold marts and the quality
+results. It is built for two readers: a fleet engineer looking for what is out of tolerance, and a
+reviewer checking that the pipeline's numbers hold up.
+
+* **Overview**: the vehicles out of tolerance on a chosen day (most severe first, one row per
+  vehicle, with the measured deviation), next to the validation verdicts and a title block
+  recording the run (VSS release, contract versions, gate results).
+* **Battery**: SoH per vehicle on one shared scale, the hottest cell against the 45 °C stress
+  threshold, and cell-voltage delta against the 100 mV watch line.
+* **Faults**: per DTC, the signals that move before it, and a close-up of one onset with the
+  vehicle's normal range and the precursor window.
+* **Eco-driving**: the fleet ranked by trailing 7-day eco score, and the harsh-acceleration trend
+  against the fleet's interquartile band.
+* **Data quality**: every gate's latest result, the Dead Letter Queue by error code, stuck-sensor
+  runs, and which VSS signals each platform contract maps.
+
+Its look is a technical drawing sheet (see [`DESIGN.md`](DESIGN.md)). Every chart draws its
+specification (a plausibility range, a gate threshold, a vehicle's normal range) as a tolerance
+band, so whether a value is in spec can be read from its position. VINs appear only as vehicle
+codes and pseudonym fragments, and the data is labelled synthetic in the chrome.
+
+![Fault precursors: what moves before P0217, and one onset up close](docs/img/dashboard-faults.png)
+
+<img src="docs/img/dashboard-mobile.png" alt="The overview at phone width" width="300">
+
+Screenshots are headless captures of the running dashboard on the synthetic 14-day dataset
+(`scripts/capture_dashboard.py`, Playwright in Docker).
+
+## Benchmarks
+
+Measured on a laptop: one Spark worker with 4 cores and 3 GB executor memory, everything in Docker
+on Windows 11.
+
+| Workload | Volume | Time | Throughput |
+|---|---|---|---|
+| Simulate 14 days × 44 vehicles (8 shards) | 10.7 M messages | 467 s | 23 k msg/s |
+| Bronze ingest (landing → Iceberg, VIN pseudonymized) | 10,665,997 rows | 242 s | 44 k rows/s |
+| Silver conformance (decode, range checks, MERGE dedup) | 69.4 M readings, 96.8 k quarantined, 83 k DTCs | 823 s | 84 k readings/s |
+| Gold build (pivot + 3 marts, 14 days) | 10.6 M vehicle states | about 4.3 min | — |
+| All quality gates (Bronze, Silver, Gold) | 4-week window | 9 min 18 s | — |
+| Bronze, one fleet-day at 1 Hz | 1.9 M rows | 68 s | 28 k rows/s |
+| Silver, one fleet-day at 1 Hz | 12.4 M readings | 4.4 min | 48 k readings/s |
+
+The 14-day Silver run is about 1.75× faster per reading than the one-day run: one large micro-batch
+amortizes the contract join and the MERGE better than many small ones.
 
 ## Repository layout
 
@@ -465,12 +551,16 @@ plateauing signals such as coolant at thermostat temperature produced false alar
 │  ├─ quality/
 │  │  ├─ checks.py              # declarative quality gates per layer -> ops.dq_results
 │  │  └─ rules.py               # stuck-sensor and schema-drift detectors
-│  └─ ops/maintenance.py        # Iceberg compaction + snapshot expiry
+│  ├─ ops/maintenance.py        # Iceberg compaction + snapshot expiry
+│  └─ dashboard/                # Streamlit app: data (PyIceberg), model, ui (design tokens), views
 ├─ dags/                        # Airflow 3 DAGs (pipeline, maintenance) + CI import check
+├─ scripts/                     # demo.sh (one-command demo), capture_dashboard.py (screenshots)
+├─ .streamlit/                  # dashboard theme (mirrors the tokens in dashboard/ui.py)
+├─ DESIGN.md, PRODUCT.md        # dashboard design system and product context
 └─ tests/
    ├─ unit/                     # no external services needed (run in CI)
    ├─ integration/              # need the compose stack (marker: integration)
-   └─ fixtures/                 # captured sample payloads + ground truth
+   └─ fixtures/                 # sample payloads + ground truth, dashboard snapshot (synthetic)
 ```
 
 ## Delivery plan
@@ -483,4 +573,4 @@ plateauing signals such as coolant at thermostat temperature produced false alar
 | 3 | Silver: contract-driven conformance engine + DLQ | ✅ |
 | 4 | Gold: battery SoH, predictive DTC, eco-driving marts | ✅ |
 | 5 | Orchestration, tests, quality gates | ✅ |
-| 6 | Dashboard, benchmarks, one-command demo | ⏳ |
+| 6 | Dashboard, benchmarks, one-command demo | ✅ |

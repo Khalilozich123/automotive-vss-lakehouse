@@ -135,3 +135,22 @@ def test_full_sample_conforms_and_replays_idempotently(
     assert replay.bronze_rows == len(lines)
     assert (replay.signals, replay.quarantined, replay.dtc_events) == (0, 0, 0)
     assert spark.table(tables.signals).count() == signals.count()
+
+
+def test_a_purge_in_bronze_does_not_stop_the_stream(
+    spark: SparkSession, env: dict[str, object]
+) -> None:
+    """Retention or an erasure request deletes Bronze rows; Silver must keep streaming."""
+    tables = env["tables"]
+    assert isinstance(tables, engine.SilverTables)
+    lines = SAMPLE.read_text(encoding="utf-8").splitlines()
+    half = len(lines) // 2
+    _land_and_ingest(spark, env, "part-a", lines[:half])
+    assert (
+        engine.run(spark, str(env["bronze"]), tables, str(env["silver_ckpt"])).bronze_rows == half
+    )
+
+    spark.sql(f"DELETE FROM {env['bronze']} WHERE platform_id = 'VW_MQB'")  # a delete snapshot
+    _land_and_ingest(spark, env, "part-b", lines[half:])
+    after = engine.run(spark, str(env["bronze"]), tables, str(env["silver_ckpt"]))
+    assert after.bronze_rows == len(lines) - half  # only the new appends, nothing replayed

@@ -48,6 +48,7 @@ RESULTS_SCHEMA = (
 OPS = {"<=": operator.le, ">=": operator.ge, "==": operator.eq}
 B, S = "lakehouse.bronze.telemetry_raw", "lakehouse.silver"
 IN_W = "BETWEEN DATE'{start}' AND DATE'{end}'"
+INGESTED_IN_W = f"(SELECT ingestion_id FROM {B} WHERE to_date(ingested_at) {IN_W})"
 
 
 @dataclass(frozen=True)
@@ -83,22 +84,27 @@ CHECKS: list[Check] = [
           "(msg_id, vss_path) present more than once (dedup broken)",
           f"""SELECT count(*) FROM (SELECT msg_id, vss_path FROM {S}.telemetry_signals
               WHERE to_date(event_ts) {IN_W} GROUP BY msg_id, vss_path HAVING count(*) > 1)"""),
+    # Each ratio keeps numerator and denominator on one time basis: signal readings by event
+    # time (as Silver is partitioned), whole messages by Bronze ingestion time (Bronze has no
+    # event time, and an unparseable message has none either).
     Check("silver_quarantine_rate", "silver", "error", "<=", 0.05,
           "quarantined readings / all readings (a jump means a broken feed or contract)",
           f"""SELECT coalesce(q / nullif(q + s, 0), 0) FROM
               (SELECT count(*) q FROM {S}.telemetry_quarantine
-               WHERE to_date(quarantined_at) {IN_W}),
+               WHERE signal_name IS NOT NULL AND to_date(event_ts) {IN_W}),
               (SELECT count(*) s FROM {S}.telemetry_signals WHERE to_date(event_ts) {IN_W})"""),
     Check("silver_parse_error_rate", "silver", "warn", "<=", 0.02,
           "unparseable messages / Bronze messages",
           f"""SELECT coalesce(p / nullif(b, 0), 0) FROM
-              (SELECT count(*) p FROM {S}.telemetry_quarantine
-               WHERE error_code = 'PARSE_ERROR' AND to_date(quarantined_at) {IN_W}),
+              (SELECT count(*) p FROM {S}.telemetry_quarantine q
+               JOIN {INGESTED_IN_W} USING (ingestion_id)
+               WHERE q.error_code = 'PARSE_ERROR'),
               (SELECT count(*) b FROM {B} WHERE to_date(ingested_at) {IN_W})"""),
     Check("silver_unknown_platform_messages", "silver", "warn", "==", 0,
           "messages from platforms without a contract (onboarding needed)",
-          f"""SELECT count(*) FROM {S}.telemetry_quarantine
-              WHERE error_code = 'UNKNOWN_PLATFORM' AND to_date(quarantined_at) {IN_W}"""),
+          f"""SELECT count(*) FROM {S}.telemetry_quarantine q
+              JOIN {INGESTED_IN_W} USING (ingestion_id)
+              WHERE q.error_code = 'UNKNOWN_PLATFORM'"""),
     # ------------------------------------------------------------------ gold
     Check("gold_state_built", "gold", "error", "==", 0,
           "Silver has readings in the window but the vehicle-state pivot does not",
