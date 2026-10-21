@@ -10,6 +10,27 @@ PySpark and Apache Iceberg.
 
 ![Fleet status: vehicles out of tolerance next to the validation verdicts](docs/img/dashboard-overview.png)
 
+## Context
+
+This project started with a question I kept coming back to: what do you do when there are too many
+data sources? Every new source arrives with its own format, its own names and its own units, and
+if each one gets its own pipeline, the system grows harder to maintain with every source you add.
+
+Connected vehicles are an extreme case of that problem. One fleet can mix many brands and
+platforms, each with its own CAN signals, encodings and scalings, yet the people analysing the
+fleet want to ask one question of all of it. When I came across the idea of conforming
+heterogeneous vehicle telemetry to a shared standard, the COVESA Vehicle Signal Specification, it
+answered my question directly, so I built it.
+
+The approach this repository takes:
+
+* **Describe each source, don't code it.** A platform is onboarded with a contract file that maps
+  its signals to VSS, not with new pipeline code. One generic engine reads every contract.
+* **Never lose data, never stop for it.** Raw data is kept as received, and anything that doesn't
+  fit its contract goes to a dead-letter queue instead of breaking the stream.
+* **Prove the result.** The fleet is simulated from real production CAN databases, so every
+  number the pipeline produces can be checked against the ground truth.
+
 ## Local stack
 
 Everything runs in Docker; nothing is installed on the host.
@@ -556,7 +577,7 @@ amortizes the contract join and the MERGE better than many small ones.
 ├─ dags/                        # Airflow 3 DAGs (pipeline, maintenance) + CI import check
 ├─ scripts/                     # demo.sh (one-command demo), capture_dashboard.py (screenshots)
 ├─ .streamlit/                  # dashboard theme (mirrors the tokens in dashboard/ui.py)
-├─ DESIGN.md, PRODUCT.md        # dashboard design system and product context
+├─ DESIGN.md                    # dashboard design system
 └─ tests/
    ├─ unit/                     # no external services needed (run in CI)
    ├─ integration/              # need the compose stack (marker: integration)
